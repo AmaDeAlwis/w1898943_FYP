@@ -7,7 +7,8 @@ Project overview
 This project focuses on predicting survival probabilities for breast cancer patients using machine learning and deep learning models. The study utilizes the METABRIC dataset, which includes treatment types and gene expression data.
 
 Models used
-The following models were implemented partially to predict survival probabilities
+
+The following models were implemented partially to predict survival probabilities.
 
 XGBoost,
 Coxpropotional hazard model,
@@ -15,7 +16,7 @@ Aalen's additive hazard model and
 Graph neural network (GNN)
 
 
-These models can be changed in future since the model establishments are ongoing
+These models can be changed in future since the model establishments are ongoing.
 
 Methodology
 

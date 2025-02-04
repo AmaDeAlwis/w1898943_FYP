@@ -28,7 +28,7 @@ Model training.
 Next steps - Cross validation,
              Hyperparamter tuning,
              Model evaluation using appropriate performance metrics and
-             Building a user friendly interface to input clinical data for patients to get probability predictions
+             building a user friendly interface to input clinical data for patients to get probability predictions.
 
 
 User Interface

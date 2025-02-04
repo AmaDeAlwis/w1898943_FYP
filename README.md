@@ -13,16 +13,20 @@ XGBoost,
 Coxpropotional hazard model,
 Aalen's additive hazard model and
 Graph neural network (GNN)
+
+
 These models can be changed in future since the model establishments are ongoing
 
 Methodology
 
-Exploratory Data Analysis
-Data pre processing
-Model training
-Next steps - Cross validation
-             Hyperparamter tuning
-             Model evaluation using appropriate performance metrics
+Exploratory Data Analysis,
+Data pre processing,
+Model training.
+
+
+Next steps - Cross validation,
+             Hyperparamter tuning,
+             Model evaluation using appropriate performance metrics and
              Building a user friendly interface to input clinical data for patients to get probability predictions
 
 
@@ -36,4 +40,5 @@ This does not include the full code of the prediction model (in progress).
 The code was developed and executed through Google Colab.
 
 Disclaimer
+
 This project is for academic purpose only.

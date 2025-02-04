@@ -4,7 +4,7 @@ Breast cancer survival probability prediction model
 
 Project overview
 
-This project focuses on predicting survival probabilities for breast cancer patients using machine learning and deep learning models. The study utilizes the METABRIC dataset, which includes treatment types and gene expression data.
+This project focuses on predicting survival probabilities for breast cancer patients using machine learning, statistical models and deep learning models. The study utilizes the METABRIC dataset, which includes treatment types and gene expression data.
 
 Models used
 
@@ -42,4 +42,4 @@ The code was developed and executed through Google Colab.
 
 Disclaimer
 
-This project is for academic purpose only.
+This project is for academic purposes only.

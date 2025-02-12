@@ -10,8 +10,8 @@ Models used
 
 The following models were implemented partially to predict survival probabilities.
 
-XGBoost,
-Coxpropotional hazard model,
+Random Survival Forest model,
+Coxproportional hazard model,
 Aalen's additive hazard model and
 Graph neural network (GNN)
 
@@ -22,10 +22,11 @@ Methodology
 
 Exploratory Data Analysis,
 Data pre processing,
-Model training.
+Initializing the models
 
 
-Next steps - Cross validation,
+Next steps - Training the model,
+             Cross validation,
              Hyperparamter tuning,
              Model evaluation using appropriate performance metrics and
              building a user friendly interface to input clinical data for patients to get probability predictions.

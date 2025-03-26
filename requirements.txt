@@ -1,1 +1,11 @@
+streamlit
+pandas
+numpy
+matplotlib
+scikit-learn
+lifelines
+scikit-survival
+joblib
+torch
+torch-geometric
 

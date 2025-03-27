@@ -13,7 +13,7 @@ def apply_custom_css():
     st.markdown("""
         <style>
         .stApp {
-            background-color: 	#C2185B;
+            background-color: 	#B03060;
         }
         section[data-testid="stSidebar"] {
             background-color: #ffe6f0;

@@ -9,65 +9,22 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 
 # 🎨 Then apply custom CSS
-def apply_custom_css():
+def styled_input_form():
     st.markdown("""
-        <style>
-        /* 🎀 App background */
-        .stApp {
-            background-color: #FFEBF0;
-        }
-
-        /* 🎀 Sidebar background */
-        section[data-testid="stSidebar"] {
-            background-color: #FFD6E8;
-        }
-
-        /* 🎀 Header text */
-        h1, h2 {
-            color: #C2185B;
-            text-align: center;
-        }
-
-        /* 🎀 Button styling */
-        .stButton button {
-            background-color: #FF69B4;
-            color: white;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-
-        .stButton button:hover {
-            background-color: #FF85C1;
-        }
-
-        /* 🎯 Real input fix for selectboxes and number inputs */
-        div[data-baseweb="input"] input {
-            background-color: #FFF0F5 !important;
-            color: black !important;
-            border: 1px solid #FFC0CB !important;
-            border-radius: 5px !important;
-        }
-
-        div[data-baseweb="select"] > div {
-            background-color: #FFF0F5 !important;
-            color: black !important;
-            border: 1px solid #FFC0CB !important;
-            border-radius: 5px !important;
-        }
-
-        .stNumberInput input {
-            background-color: #FFF0F5 !important;
-            color: black !important;
-            border: 1px solid #FFC0CB !important;
-            border-radius: 5px !important;
-        }
-
-        /* Remove the weird caret bar */
-        div[data-baseweb="input"]::before {
-            border-right: none !important;
-        }
-        </style>
+    <style>
+    .form-container {
+        background-color: #FFE6EB;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
+    }
+    .form-container label {
+        font-weight: bold;
+        color: #C2185B;
+    }
+    </style>
     """, unsafe_allow_html=True)
+
 
 
 # ----- 🔧 MongoDB Setup -----

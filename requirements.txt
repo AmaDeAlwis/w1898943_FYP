@@ -1,4 +1,5 @@
 streamlit
+pymango
 pandas
 numpy
 matplotlib

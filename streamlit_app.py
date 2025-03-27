@@ -13,25 +13,47 @@ def apply_custom_css():
     st.markdown("""
         <style>
         .stApp {
-            background-color:#FFB6C1 ;
+            background-color:#FFB6C1;
         }
+
         section[data-testid="stSidebar"] {
             background-color: #FFD6E8;
         }
+
         h1, h2 {
             color: #d63384;
             text-align: center;
         }
+
         .stButton button {
             background-color: #ff69b4;
             color: white;
             border-radius: 10px;
         }
+
         .stButton button:hover {
             background-color: #ff85c1;
         }
+
+        /* 🎯 Fix for black input bars */
+        input {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
+        div[data-baseweb="select"] {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
+        .stNumberInput input {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
         </style>
     """, unsafe_allow_html=True)
+
 
 apply_custom_css()
 

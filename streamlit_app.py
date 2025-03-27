@@ -12,26 +12,54 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 def apply_custom_css():
     st.markdown("""
         <style>
+        /*  Main App Background */
         .stApp {
-            background-color:#FFB6C1 ;
+            background-color: #FFB6C1;
         }
+
+        /*  Sidebar Background */
         section[data-testid="stSidebar"] {
             background-color: #FFD6E8;
         }
+
+        /* Headers */
         h1, h2 {
             color: #d63384;
             text-align: center;
         }
+
+        /*  Buttons */
         .stButton button {
             background-color: #ff69b4;
             color: white;
             border-radius: 10px;
         }
+
         .stButton button:hover {
             background-color: #ff85c1;
         }
+
+        /*  Input fields (fix dark mode black bars) */
+        input, select, textarea {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
+        /*  Dropdown boxes */
+        .stSelectbox div[data-baseweb="select"] {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
+        /* Number inputs */
+        .stNumberInput input {
+            background-color: #fff0f5 !important;
+            color: black !important;
+        }
+
         </style>
     """, unsafe_allow_html=True)
+
 
 apply_custom_css()
 
@@ -43,7 +71,7 @@ def save_to_mongo(data):
     collection.insert_one(data)
 
 # ----- 🩺 Title & Layout -----
-st.title("🎀 Breast Cancer Survival Prediction Interface")
+st.title(" Breast Cancer Survival Prediction Interface")
 
 st.markdown("Fill in the details below to generate predictions and insights.")
 

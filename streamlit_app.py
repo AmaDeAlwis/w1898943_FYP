@@ -16,7 +16,7 @@ def apply_custom_css():
             background-color:#FFB6C1 ;
         }
         section[data-testid="stSidebar"] {
-            background-color: #ffe6f0;
+            background-color: #FFD6E8;
         }
         h1, h2 {
             color: #d63384;

@@ -12,50 +12,57 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 def apply_custom_css():
     st.markdown("""
         <style>
-        /* Backgrounds */
+        /* 🎀 App background */
         .stApp {
-            background-color:#FFB6C1;
+            background-color: #FFEBF0;
         }
 
+        /* 🎀 Sidebar background */
         section[data-testid="stSidebar"] {
             background-color: #FFD6E8;
         }
 
+        /* 🎀 Header text */
         h1, h2 {
-            color: #d63384;
+            color: #C2185B;
             text-align: center;
         }
 
+        /* 🎀 Button styling */
         .stButton button {
-            background-color: #ff69b4;
+            background-color: #FF69B4;
             color: white;
             border-radius: 10px;
+            font-weight: bold;
         }
 
         .stButton button:hover {
-            background-color: #ff85c1;
+            background-color: #FF85C1;
         }
 
-        /* Fix black bars in selectboxes and number inputs */
+        /* 🎯 Real input fix for selectboxes and number inputs */
         div[data-baseweb="input"] input {
-            background-color: #ffe6eb !important;
-            color: #000 !important;
-            border: none !important;
+            background-color: #FFF0F5 !important;
+            color: black !important;
+            border: 1px solid #FFC0CB !important;
+            border-radius: 5px !important;
         }
 
-        div[data-baseweb="select"] {
-            background-color: #ffe6eb !important;
-            color: #000 !important;
-            border: none !important;
+        div[data-baseweb="select"] > div {
+            background-color: #FFF0F5 !important;
+            color: black !important;
+            border: 1px solid #FFC0CB !important;
+            border-radius: 5px !important;
         }
 
         .stNumberInput input {
-            background-color: #ffe6eb !important;
+            background-color: #FFF0F5 !important;
             color: black !important;
-            border: none !important;
+            border: 1px solid #FFC0CB !important;
+            border-radius: 5px !important;
         }
 
-        /* Optional: Hide the vertical bar (caret) on dark theme */
+        /* Remove the weird caret bar */
         div[data-baseweb="input"]::before {
             border-right: none !important;
         }

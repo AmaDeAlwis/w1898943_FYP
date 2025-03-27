@@ -12,6 +12,7 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 def apply_custom_css():
     st.markdown("""
         <style>
+        /* Backgrounds */
         .stApp {
             background-color:#FFB6C1;
         }
@@ -35,27 +36,32 @@ def apply_custom_css():
             background-color: #ff85c1;
         }
 
-        /* 🎯 Fix for black input bars */
-        input {
-            background-color: #fff0f5 !important;
-            color: black !important;
+        /* Fix black bars in selectboxes and number inputs */
+        div[data-baseweb="input"] input {
+            background-color: #ffe6eb !important;
+            color: #000 !important;
+            border: none !important;
         }
 
         div[data-baseweb="select"] {
-            background-color: #fff0f5 !important;
-            color: black !important;
+            background-color: #ffe6eb !important;
+            color: #000 !important;
+            border: none !important;
         }
 
         .stNumberInput input {
-            background-color: #fff0f5 !important;
+            background-color: #ffe6eb !important;
             color: black !important;
+            border: none !important;
         }
 
+        /* Optional: Hide the vertical bar (caret) on dark theme */
+        div[data-baseweb="input"]::before {
+            border-right: none !important;
+        }
         </style>
     """, unsafe_allow_html=True)
 
-
-apply_custom_css()
 
 # ----- 🔧 MongoDB Setup -----
 def save_to_mongo(data):

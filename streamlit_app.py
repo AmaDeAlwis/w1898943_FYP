@@ -4,8 +4,9 @@ import numpy as np
 from pymongo import MongoClient
 import matplotlib.pyplot as plt
 
-# ✅ Set page config FIRST
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
+
+
 
 # 🎨 Then apply custom CSS
 def apply_custom_css():
@@ -42,7 +43,6 @@ def save_to_mongo(data):
     collection.insert_one(data)
 
 # ----- 🩺 Title & Layout -----
-st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.title("🎀 Breast Cancer Survival Prediction Interface")
 
 st.markdown("Fill in the details below to generate predictions and insights.")

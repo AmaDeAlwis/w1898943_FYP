@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Set layout
+# Set page layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # --- Custom CSS ---
@@ -19,8 +19,8 @@ h1 {
     color: #ad1457;
 }
 
-/* Target buttons inside form */
-button[kind="formSubmit"] {
+/* Properly target all form submit buttons */
+button[type="submit"] {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold !important;
@@ -32,7 +32,7 @@ button[kind="formSubmit"] {
     cursor: pointer !important;
 }
 
-/* Inputs */
+/* Input cursor and border-radius */
 input, select, textarea {
     border-radius: 10px !important;
     cursor: pointer !important;
@@ -40,12 +40,17 @@ input, select, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# --- App UI Start ---
+# --- Reset logic using query_params ---
+if "reset" in st.query_params:
+    st.query_params.clear()
+    st.rerun()
+
+# --- UI Header ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- FORM ---
+# --- FORM START ---
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -71,26 +76,20 @@ with st.form("input_form", clear_on_submit=False):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Buttons inside form
+    # Button Layout in Form
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("🔄 Reset")
     with colB:
         predict = st.form_submit_button("🔍 Predict")
 
-# --- Logic ---
+# --- Button Logic ---
 if reset:
-    # Use query params to trigger rerun (safely within form)
-    st.experimental_set_query_params(reset="1")
+    st.query_params["reset"] = "true"
     st.rerun()
 
 if predict:
     st.success("Prediction functionality coming soon...")
 
-# --- Reset trigger logic (at top or bottom of script is fine) ---
-params = st.experimental_get_query_params()
-if "reset" in params:
-    st.experimental_set_query_params()  # Clear after one rerun
-    st.rerun()
-
+# Close container
 st.markdown("</div>", unsafe_allow_html=True)

@@ -6,31 +6,40 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# 🎨 Custom Styling
-def styled_input_form():
+# ---- Custom CSS ----
+def apply_custom_styles():
     st.markdown("""
     <style>
-    .form-container {
-        background-color: #ffe0eb;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-    }
+        .main {
+            padding: 40px 80px;
+            background-color: #f9b3c2;
+            border: 8px solid white;
+            border-radius: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #C2185B;
+        }
+        .form-block {
+            background-color: #ffc3d9;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
     </style>
     """, unsafe_allow_html=True)
 
-styled_input_form()
+apply_custom_styles()
 
-# ----- 🩺 Title -----
-st.title("🎀 Breast Cancer Survival Prediction Interface")
-st.markdown("Fill in the details below to generate predictions and insights.")
+# ---- Title ----
+st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("#### Fill in the details below to generate predictions and insights.")
 
-# ----- 📋 Input Form -----
+# ---- Form ----
 with st.form("patient_form"):
-    # --- Clinical Data ---
-    st.markdown("## 🧬 Clinical Data")
-    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+    # Clinical Data Block
+    st.markdown("### 🧬 Clinical Data")
+    st.markdown('<div class="form-block">', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
 
@@ -41,21 +50,21 @@ with st.form("patient_form"):
         lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, value=3)
 
     with col2:
-        er_status = st.selectbox("ER Status", ["Positive", "Negative"])
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"])
         her2_status = st.selectbox("HER2 Status", ["Positive", "Negative"])
+        er_status = st.selectbox("ER Status", ["Positive", "Negative"])
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Treatment Details ---
-    st.markdown("## 💊 Treatment Details")
-    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+    # Treatment Data Block
+    st.markdown("### 💊 Treatment Details")
+    st.markdown('<div class="form-block">', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
 
     with col3:
-        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
         chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"])
+        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
 
     with col4:
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
@@ -63,18 +72,19 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Bottom Left Buttons ---
-    left_btn_col, _, _ = st.columns([1, 6, 1])
-    with left_btn_col:
+    # Buttons (bottom left)
+    col_btn_left, col_btn_space, _ = st.columns([1, 6, 1])
+    with col_btn_left:
         reset = st.form_submit_button("🔄 RESET")
-        submitted = st.form_submit_button("🔍 PREDICT")
+        submit = st.form_submit_button("🔍 PREDICT")
 
-# ----- 🔁 Reset Logic -----
+# ---- Reset Logic ----
 if reset:
     st.experimental_rerun()
 
-# ----- 🔮 Prediction -----
-if submitted:
+# ---- Prediction Logic ----
+if submit:
+    # Collect input
     user_data = {
         "Age": age,
         "Tumor_Stage": tumor_stage,
@@ -98,9 +108,9 @@ if submitted:
     fig, ax = plt.subplots(figsize=(6, 1.5))
     ax.barh(["Survival Probability"], [probability], color="#d63384")
     ax.set_xlim(0, 1)
+    ax.set_xticks([])
     for spine in ax.spines.values():
         spine.set_visible(False)
-    ax.set_xticks([])
     st.pyplot(fig)
 
     # Save to MongoDB
@@ -110,6 +120,6 @@ if submitted:
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# Footer
+# ---- Footer ----
 st.markdown("---")
-st.caption("Created with ❤️ for breast cancer survival awareness")
+st.caption("Created with ❤️ to support breast cancer awareness")

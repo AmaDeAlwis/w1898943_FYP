@@ -1,57 +1,60 @@
 import streamlit as st
 
-# Set layout
+# Set wide layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- Custom CSS ---
+# --- Set background manually (theme removed from config.toml) ---
 st.markdown("""
-<style>
-h1 {
-    text-align: center;
-    color: #FFFFFF;
-}
+    <style>
+    body {
+        background-color: #ffe3ec !important;
+    }
 
-.section-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 2rem;
-    margin-bottom: 0.5rem;
-    color: #ad1457;
-}
+    h1 {
+        text-align: center;
+        color: #FFFFFF;
+    }
 
-/* Apply custom style to the Predict and Reset buttons */
-button[aria-label="🔍 Predict"],
-button[aria-label="🔄 Reset"] {
-    background-color: #ad1457 !important;
-    color: white !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    border: none !important;
-    border-radius: 10px !important;
-    padding: 0.6rem 1.5rem !important;
-    margin-top: 1rem !important;
-    cursor: pointer !important;
-}
+    .section-title {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 2rem;
+        margin-bottom: 0.5rem;
+        color: #ad1457;
+    }
 
-/* Inputs */
-input, select, textarea {
-    border-radius: 10px !important;
-    cursor: pointer !important;
-}
-</style>
+    /* Custom styled buttons */
+    button[aria-label="🔍 Predict"],
+    button[aria-label="🔄 Reset"] {
+        background-color: #ad1457 !important;
+        color: white !important;
+        font-weight: bold !important;
+        text-transform: uppercase !important;
+        border: none !important;
+        border-radius: 10px !important;
+        padding: 0.6rem 1.5rem !important;
+        margin-top: 1rem !important;
+        cursor: pointer !important;
+    }
+
+    input, select, textarea {
+        border-radius: 10px !important;
+        cursor: pointer !important;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
-# --- Handle Reset logic ---
+# --- Reset logic using query_params ---
 if "reset" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-# --- UI Start ---
+# --- Header Section ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- FORM ---
+# --- FORM START ---
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -77,14 +80,14 @@ with st.form("input_form", clear_on_submit=False):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Buttons inside the form
+    # Custom Button Row
     colA, colB = st.columns(2)
     with colA:
-        reset = st.form_submit_button("🔄 RESET")
+        reset = st.form_submit_button("🔄 Reset")
     with colB:
-        predict = st.form_submit_button("🔍 PREDICT")
+        predict = st.form_submit_button("🔍 Predict")
 
-# --- Button Logic ---
+# --- Logic for Buttons ---
 if reset:
     st.query_params["reset"] = "true"
     st.rerun()
@@ -92,5 +95,4 @@ if reset:
 if predict:
     st.success("Prediction functionality coming soon...")
 
-# Close container
 st.markdown("</div>", unsafe_allow_html=True)

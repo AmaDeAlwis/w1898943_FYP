@@ -19,20 +19,7 @@ h1 {
     color: #ad1457;
 }
 
-/* Custom buttons style */
-div.stButton > button {
-    background-color: #ad1457 !important;
-    color: white !important;
-    font-weight: bold !important;
-    text-transform: uppercase;
-    border: none;
-    border-radius: 10px;
-    padding: 0.6rem 1.5rem;
-    margin-top: 1rem;
-    cursor: pointer;
-}
-
-/* Input hover/cursor style */
+/* Input styling */
 input, select, textarea {
     border-radius: 10px !important;
     cursor: pointer !important;
@@ -42,8 +29,7 @@ input, select, textarea {
 
 # --- UI Layout ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
-
-st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
 # --- FORM START ---
@@ -72,20 +58,36 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Button layout
-    col_left, col_right = st.columns(2)
-    with col_left:
-        reset = st.form_submit_button("🔄 RESET")
-    with col_right:
-        submit = st.form_submit_button("🔍 PREDICT")
+    submitted = st.form_submit_button("Submit")  # Dummy submit to trigger form validation
 
-# --- RESET LOGIC ---
-if reset:
-    st.experimental_rerun()
+# --- Custom Buttons (Outside Form) ---
+colA, colB = st.columns(2)
+with colA:
+    if st.button("🔄 RESET"):
+        st.experimental_rerun()
+with colB:
+    predict_btn = st.button("🔍 PREDICT")
 
-# --- SUBMIT LOGIC ---
-if submit:
+# Custom CSS for the buttons (override Streamlit theme completely)
+st.markdown("""
+<style>
+div.stButton > button {
+    background-color: #ad1457 !important;
+    color: white !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    border: none;
+    border-radius: 10px !important;
+    padding: 0.6rem 1.5rem !important;
+    margin-top: 0.5rem !important;
+    cursor: pointer !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- Prediction Logic ---
+if predict_btn:
     st.success("Prediction functionality coming soon...")
 
-# Close container
+# --- Close Container ---
 st.markdown("</div>", unsafe_allow_html=True)

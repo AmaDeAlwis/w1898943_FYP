@@ -19,9 +19,21 @@ h1 {
     color: #ad1457;
 }
 
-/* Input styling */
 input, select, textarea {
     border-radius: 10px !important;
+    cursor: pointer !important;
+}
+
+/* Button Styling Inside Form */
+div.stForm div.stButton > button {
+    background-color: #ad1457 !important;
+    color: white !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    border: none !important;
+    border-radius: 10px !important;
+    padding: 0.6rem 1.5rem !important;
+    margin-top: 1rem !important;
     cursor: pointer !important;
 }
 </style>
@@ -29,7 +41,7 @@ input, select, textarea {
 
 # --- UI Layout ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
 # --- FORM START ---
@@ -58,36 +70,19 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    submitted = st.form_submit_button("Submit")  # Dummy submit to trigger form validation
+    # Custom Buttons inside form
+    colA, colB = st.columns(2)
+    with colA:
+        reset = st.form_submit_button("🔄 RESET")
+    with colB:
+        submit = st.form_submit_button("🔍 PREDICT")
 
-# --- Custom Buttons (Outside Form) ---
-colA, colB = st.columns(2)
-with colA:
-    if st.button("🔄 RESET"):
-        st.experimental_rerun()
-with colB:
-    predict_btn = st.button("🔍 PREDICT")
+# --- Logic ---
+if reset:
+    st.experimental_rerun()
 
-# Custom CSS for the buttons (override Streamlit theme completely)
-st.markdown("""
-<style>
-div.stButton > button {
-    background-color: #ad1457 !important;
-    color: white !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    border: none;
-    border-radius: 10px !important;
-    padding: 0.6rem 1.5rem !important;
-    margin-top: 0.5rem !important;
-    cursor: pointer !important;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# --- Prediction Logic ---
-if predict_btn:
+if submit:
     st.success("Prediction functionality coming soon...")
 
-# --- Close Container ---
+# Close container
 st.markdown("</div>", unsafe_allow_html=True)

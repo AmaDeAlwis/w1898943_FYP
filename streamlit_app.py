@@ -25,7 +25,7 @@ def styled_input_form():
     </style>
     """, unsafe_allow_html=True)
 
-
+styled_input_form()
 
 # ----- 🔧 MongoDB Setup -----
 def save_to_mongo(data):

@@ -41,9 +41,9 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Form Start
+# --- FORM START ---
 with st.form("input_form"):
-    st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
@@ -57,7 +57,7 @@ with st.form("input_form"):
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"])
         her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"])
 
-    st.markdown("<div class='section-title'> Treatment Data</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>💊 Treatment Data</div>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
 
     with col3:
@@ -67,24 +67,18 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Buttons
-    c1, c2 = st.columns([1, 1])
-    with c1:
-        reset = st.form_submit_button("🔄 Reset")
-    with c2:
-        submit = st.form_submit_button("🔍 Predict")
+    submit = st.form_submit_button("🔍 Predict")
 
-# Close Container
-st.markdown("</div>", unsafe_allow_html=True)
+# --- RESET BUTTON OUTSIDE FORM ---
+reset = st.button("🔄 Reset")
 
-# Reset Logic
 if reset:
     st.experimental_rerun()
 
-# Validation and Submission Logic
+# --- PREDICTION PLACEHOLDER ---
 if submit:
-    # Check if all fields are filled (which is implicitly done by default since all fields have default values)
-    if age and menopausal_status and tumor_stage and lymph_nodes_examined is not None and er_status and pr_status and her2_status and chemotherapy and surgery and radiotherapy and hormone_therapy:
-        st.success("Prediction functionality coming soon...")
-    else:
-        st.error("Please fill in all fields before predicting.")
+    # All fields are already filled due to default values; validation is not strictly needed
+    st.success("Prediction functionality coming soon...")
+
+# Close Container
+st.markdown("</div>", unsafe_allow_html=True)

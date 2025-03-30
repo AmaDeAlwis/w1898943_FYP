@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 # Set page config
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# ---- Custom CSS ----
+# ---- Apply Custom CSS ----
 st.markdown("""
 <style>
 body {
@@ -39,21 +39,13 @@ h1 {
 }
 </style>
 """, unsafe_allow_html=True)
-apply_styles()
 
-# ---- Page Wrapper (Card-style layout) ----
+# ---- Start Page Wrapper (white card) ----
 st.markdown('<div class="main-container"><div class="white-box">', unsafe_allow_html=True)
 
-# Title and description inside the white card
+# ---- Title and Description ----
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("#### Fill in the details below to generate predictions and insights.")
-
-# --- Everything else: form, fields, prediction, etc. ---
-# (use same form layout you already have — clinical & treatment)
-
-# ---- Close the white box and main container ----
-st.markdown('</div></div>', unsafe_allow_html=True)
-
 
 # ---- Form ----
 with st.form("patient_form"):
@@ -99,7 +91,7 @@ with st.form("patient_form"):
 if reset:
     st.experimental_rerun()
 
-# ---- Prediction ----
+# ---- Prediction Logic ----
 if submit:
     user_data = {
         "Age": age,
@@ -136,7 +128,7 @@ if submit:
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# ---- Close Main Container ----
+# ---- Close Page Wrapper ----
 st.markdown("</div></div>", unsafe_allow_html=True)
 
 # ---- Footer ----

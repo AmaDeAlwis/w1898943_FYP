@@ -1,34 +1,33 @@
 import streamlit as st
 
 # Set page config
-st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
+st.set_page_config(page_title="Breast Cancer UI", layout="wide")
 
-# 🎨 Custom CSS
+# Custom CSS to match the layout
 st.markdown("""
 <style>
+/* Full white background */
 body {
-    background-color: #f9b3c2;
-}
-.white-wrapper {
     background-color: white;
-    margin: 2rem auto;
-    padding: 3rem;
-    border-radius: 30px;
-    width: 90%;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
-h1 {
-    text-align: center;
-    color: #C2185B;
+
+/* Centered pink card with rounded corners */
+.pink-wrapper {
+    background-color: #f9b3c2;
+    border-radius: 35px;
+    margin: 40px auto;
+    padding: 50px;
+    width: 85%;
+    box-shadow: 0px 0px 20px rgba(0,0,0,0.05);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ✅ White wrapper with title inside
-st.markdown('<div class="white-wrapper">', unsafe_allow_html=True)
+# Pink wrapper start
+st.markdown('<div class="pink-wrapper">', unsafe_allow_html=True)
 
-st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
-st.markdown("#### Fill in the details below to generate predictions and insights.")
+# (Leave empty or insert title/inputs here later)
+# st.markdown("<h1 style='text-align:center;'>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# END of white wrapper
-st.markdown("</div>", unsafe_allow_html=True)
+# Pink wrapper end
+st.markdown('</div>', unsafe_allow_html=True)

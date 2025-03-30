@@ -4,50 +4,51 @@ import numpy as np
 from pymongo import MongoClient
 import matplotlib.pyplot as plt
 
-# Set white background (page-level)
+# Set white background (this gives us the border)
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- CSS Fix for White Border Layout ---
+# --- CSS to simulate white border by using full white bg and pink form box ---
 st.markdown("""
-    <style>
-    body {
-        background-color: white;
-    }
-    .pink-box {
-        background-color: #f9b3c2;
-        padding: 40px;
-        margin: 30px auto;
-        border-radius: 20px;
-        width: 90%;
-        box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
-    }
-    .section {
-        background-color: #ffe0eb;
-        padding: 25px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-    }
-    .section h3 {
-        margin-top: 0;
-        color: #C2185B;
-    }
-    h1 {
-        text-align: center;
-        color: #C2185B;
-    }
-    </style>
+<style>
+body {
+    background-color: white;
+}
+.main-card {
+    background-color: #f9b3c2;
+    padding: 3rem;
+    width: 90%;
+    margin: 2rem auto;
+    border-radius: 20px;
+    box-shadow: 0px 0px 12px rgba(0,0,0,0.05);
+}
+.section {
+    background-color: #ffe0eb;
+    padding: 25px;
+    border-radius: 15px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.section h3 {
+    margin-top: 0;
+    color: #C2185B;
+}
+h1 {
+    text-align: center;
+    color: #C2185B;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# --- Page Wrapper Starts (pink container inside white bg) ---
-st.markdown('<div class="pink-box">', unsafe_allow_html=True)
+# --- Pink Card Layout STARTS (This is the actual UI) ---
+st.markdown('<div class="main-card">', unsafe_allow_html=True)
 
-# Title & Description
+# --- Title & Subtitle ---
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("#### Fill in the details below to generate predictions and insights.")
 
-# --- Form Starts Here ---
+# --- Form ---
 with st.form("patient_form"):
-    # --- Clinical Section ---
+    # Clinical Section
     st.markdown('<div class="section"><h3>🧬 Clinical Data</h3>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -64,7 +65,7 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Treatment Section ---
+    # Treatment Section
     st.markdown('<div class="section"><h3>💊 Treatment Details</h3>', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
@@ -77,17 +78,17 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Buttons ---
+    # Buttons
     btn_col, _, _ = st.columns([1, 6, 1])
     with btn_col:
         reset = st.form_submit_button("🔄 RESET")
         submit = st.form_submit_button("🔍 PREDICT")
 
-# --- Reset Logic ---
+# Reset logic
 if reset:
     st.experimental_rerun()
 
-# --- Prediction Logic ---
+# Prediction
 if submit:
     user_data = {
         "Age": age,
@@ -121,9 +122,9 @@ if submit:
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# --- Close Page Wrapper ---
+# Close wrapper
 st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Footer ---
+# Footer
 st.markdown("---")
 st.caption("Created with ❤️ to support breast cancer awareness")

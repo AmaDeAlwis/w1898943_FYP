@@ -13,9 +13,10 @@ html, body {
 .main-container {
     background-color: #f9b3c2;
     border-radius: 30px;
-    padding: 50px;
-    max-width: 3000px;
-    margin: 50px auto;
+    padding: 60px;
+    max-width: 95%;
+    min-height: 90vh;
+    margin: 30px auto;
     box-shadow: 0px 0px 12px rgba(0,0,0,0.08);
 }
 </style>

@@ -4,10 +4,10 @@ import numpy as np
 from pymongo import MongoClient
 import matplotlib.pyplot as plt
 
-# Set page config
+# Page configuration
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- CSS Styling ---
+# ----- 💅 CSS Styling -----
 st.markdown("""
 <style>
 body {
@@ -44,17 +44,19 @@ h1 {
 </style>
 """, unsafe_allow_html=True)
 
-# --- START of Page Wrapper ---
+# ----- 🚫 Remove ALL old container boxes above this -----
+
+# ----- ✅ Page Wrapper Starts -----
 st.markdown('<div class="page-wrapper"><div class="bordered-container">', unsafe_allow_html=True)
 
-# Title & subtitle inside the box
+# ----- 🎀 Title & Description -----
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("#### Fill in the details below to generate predictions and insights.")
 
-# --- FORM START ---
+# ----- 📝 Form Starts -----
 with st.form("patient_form"):
 
-    # Clinical Section
+    # ----- Clinical Data -----
     st.markdown('<div class="section"><h3>🧬 Clinical Data</h3>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -71,7 +73,7 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Treatment Section
+    # ----- Treatment Data -----
     st.markdown('<div class="section"><h3>💊 Treatment Details</h3>', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
@@ -84,17 +86,18 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # Buttons
-    btn_col, _, _ = st.columns([1, 6, 1])
-    with btn_col:
+    # ----- Buttons -----
+    col_reset, col_submit = st.columns([1, 6])
+    with col_reset:
         reset = st.form_submit_button("🔄 RESET")
+    with col_submit:
         submit = st.form_submit_button("🔍 PREDICT")
 
-# Reset logic
+# ----- 🔁 Reset Logic -----
 if reset:
     st.experimental_rerun()
 
-# Prediction logic
+# ----- 🔮 Prediction Logic -----
 if submit:
     user_data = {
         "Age": age,
@@ -110,9 +113,11 @@ if submit:
         "Hormone_Therapy": hormone_therapy
     }
 
+    # Simulate survival probability
     probability = np.random.uniform(0.6, 0.95)
     st.success(f"🧬 Estimated 5-Year Survival Probability: **{probability:.2%}**")
 
+    # Visual summary
     st.subheader("📊 Visual Summary")
     fig, ax = plt.subplots(figsize=(6, 1.5))
     ax.barh(["Survival Probability"], [probability], color="#d63384")
@@ -122,13 +127,14 @@ if submit:
         spine.set_visible(False)
     st.pyplot(fig)
 
+    # Save to MongoDB
     client = MongoClient("mongodb://localhost:27017/")
     db = client["breast_cancer_app"]
     collection = db["patient_inputs"]
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# --- END of Page Wrapper ---
+# ----- ❌ Close Page Wrapper -----
 st.markdown('</div></div>', unsafe_allow_html=True)
 
 # Footer

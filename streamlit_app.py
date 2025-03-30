@@ -41,6 +41,9 @@ st.markdown("Fill in the details below to generate predictions and insights.")
 
 # ----- 📋 Input Form -----
 with st.form("patient_form"):
+    st.markdown("## 🧬 Clinical Data")
+    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -54,16 +57,28 @@ with st.form("patient_form"):
         tumor_stage = st.selectbox("Tumor Stage", ["Stage I", "Stage II", "Stage III", "Stage IV"])
         lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, value=3)
 
-        st.markdown("### 🩺 Treatment Details")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # --- Treatment Section ---
+    st.markdown("## 🩺 Treatment Details")
+    st.markdown('<div class="form-container">', unsafe_allow_html=True)
+
+    col3, col4 = st.columns(2)
+    with col3:
         surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
         chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"])
+
+    with col4:
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    reset_btn, predict_btn = st.columns([1, 3])
+    st.markdown('</div>', unsafe_allow_html=True)
 
+    # Buttons
+    reset_btn, predict_btn = st.columns([1, 3])
     submitted = predict_btn.form_submit_button("PREDICT")
     reset = reset_btn.form_submit_button("RESET")
+
 
 # ----- 🔁 Reset Logic -----
 if reset:

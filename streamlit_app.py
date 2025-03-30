@@ -26,6 +26,15 @@ h1 {
     padding: 0.5rem 1rem;
     margin-top: 1rem;
     cursor: pointer;
+    border: none;
+    font-weight: bold;
+}
+
+/* Custom layout for buttons */
+.button-row {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
 }
 
 input, select, textarea {
@@ -38,7 +47,7 @@ input, select, textarea {
 # --- UI Layout ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
 
-st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
 # --- FORM START ---
@@ -67,18 +76,21 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    submit = st.form_submit_button("🔍 Predict")
+    # Placeholder for button row using columns to align left and right
+    col_left, col_right = st.columns(2)
 
-# --- RESET BUTTON OUTSIDE FORM ---
-reset = st.button("🔄 Reset")
+    with col_left:
+        submit = st.form_submit_button("🔍 Predict")
+    with col_right:
+        reset = st.form_submit_button("🔄 Reset")
 
+# --- RESET LOGIC (outside form) ---
 if reset:
     st.experimental_rerun()
 
-# --- PREDICTION PLACEHOLDER ---
+# --- SUBMIT LOGIC ---
 if submit:
-    # All fields are already filled due to default values; validation is not strictly needed
     st.success("Prediction functionality coming soon...")
 
-# Close Container
+# Close container
 st.markdown("</div>", unsafe_allow_html=True)

@@ -9,41 +9,41 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # --- Custom CSS ---
 st.markdown("""
-<style>
-body {
-    background-color: #f9b3c2;
-}
-.main-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 2rem;
-}
-.border-box {
-    background-color: white;
-    padding: 3rem;
-    border-radius: 25px;
-    width: 90%;
-    box-shadow: 0 0 20px rgba(0,0,0,0.15);
-}
-.section {
-    background-color: #ffe0eb;
-    padding: 20px 30px;
-    border-radius: 15px;
-    margin-bottom: 30px;
-}
-.section h3 {
-    margin-top: 0;
-    color: #C2185B;
-}
-h1 {
-    text-align: center;
-    color: #C2185B;
-}
-</style>
+    <style>
+        body {
+            background-color: #f9b3c2;
+        }
+        .full-wrapper {
+            display: flex;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        .main-card {
+            background-color: white;
+            width: 90%;
+            padding: 3rem;
+            border-radius: 25px;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+        }
+        .section {
+            background-color: #ffe0eb;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #C2185B;
+        }
+        h1 {
+            text-align: center;
+            color: #C2185B;
+        }
+    </style>
 """, unsafe_allow_html=True)
 
-# --- Start the outer wrapper ---
-st.markdown('<div class="main-wrapper"><div class="border-box">', unsafe_allow_html=True)
+# --- Begin Page Wrapper (around EVERYTHING) ---
+st.markdown('<div class="full-wrapper"><div class="main-card">', unsafe_allow_html=True)
 
 # --- Title and Description ---
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
@@ -51,7 +51,8 @@ st.markdown("#### Fill in the details below to generate predictions and insights
 
 # --- Form Starts Here ---
 with st.form("patient_form"):
-    # === Clinical Section ===
+
+    # --- Clinical Section ---
     st.markdown('<div class="section"><h3>🧬 Clinical Data</h3>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -68,7 +69,7 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === Treatment Section ===
+    # --- Treatment Section ---
     st.markdown('<div class="section"><h3>💊 Treatment Details</h3>', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
@@ -81,7 +82,7 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # === Buttons ===
+    # --- Buttons ---
     btn_col, _, _ = st.columns([1, 6, 1])
     with btn_col:
         reset = st.form_submit_button("🔄 RESET")
@@ -91,7 +92,7 @@ with st.form("patient_form"):
 if reset:
     st.experimental_rerun()
 
-# --- Prediction Output ---
+# --- Prediction Logic ---
 if submit:
     user_data = {
         "Age": age,
@@ -107,7 +108,7 @@ if submit:
         "Hormone_Therapy": hormone_therapy
     }
 
-    # Simulate prediction
+    # Simulated prediction
     probability = np.random.uniform(0.6, 0.95)
     st.success(f"🧬 Estimated 5-Year Survival Probability: **{probability:.2%}**")
 
@@ -128,7 +129,7 @@ if submit:
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# --- Close wrapper divs ---
+# --- Close Wrapper ---
 st.markdown('</div></div>', unsafe_allow_html=True)
 
 # --- Footer ---

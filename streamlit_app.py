@@ -13,18 +13,18 @@ st.markdown("""
 body {
     background-color: white;
 }
-.full-wrapper {
+.page-wrapper {
     display: flex;
     justify-content: center;
     padding: 3rem 0;
 }
-.pink-card {
+.bordered-container {
     background-color: #f9b3c2;
-    border: 8px solid white;
-    border-radius: 30px;
     padding: 3rem;
+    border-radius: 30px;
+    border: 8px solid white;
     width: 90%;
-    box-shadow: 0px 0px 20px rgba(0,0,0,0.05);
+    box-shadow: 0 0 15px rgba(0,0,0,0.05);
 }
 .section {
     background-color: #ffe0eb;
@@ -44,17 +44,17 @@ h1 {
 </style>
 """, unsafe_allow_html=True)
 
-# --- BEGIN WRAPPER ---
-st.markdown('<div class="full-wrapper"><div class="pink-card">', unsafe_allow_html=True)
+# --- START of Page Wrapper ---
+st.markdown('<div class="page-wrapper"><div class="bordered-container">', unsafe_allow_html=True)
 
-# --- TITLE + SUBTITLE ---
+# Title & subtitle inside the box
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("#### Fill in the details below to generate predictions and insights.")
 
 # --- FORM START ---
 with st.form("patient_form"):
 
-    # --- Clinical Data Section ---
+    # Clinical Section
     st.markdown('<div class="section"><h3>🧬 Clinical Data</h3>', unsafe_allow_html=True)
 
     col1, col2 = st.columns(2)
@@ -71,7 +71,7 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Treatment Section ---
+    # Treatment Section
     st.markdown('<div class="section"><h3>💊 Treatment Details</h3>', unsafe_allow_html=True)
 
     col3, col4 = st.columns(2)
@@ -84,17 +84,17 @@ with st.form("patient_form"):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- Buttons ---
+    # Buttons
     btn_col, _, _ = st.columns([1, 6, 1])
     with btn_col:
         reset = st.form_submit_button("🔄 RESET")
         submit = st.form_submit_button("🔍 PREDICT")
 
-# --- Reset Logic ---
+# Reset logic
 if reset:
     st.experimental_rerun()
 
-# --- Prediction Logic ---
+# Prediction logic
 if submit:
     user_data = {
         "Age": age,
@@ -128,9 +128,9 @@ if submit:
     collection.insert_one({**user_data, "Survival_Probability": probability})
     st.success("✅ Data saved to local MongoDB!")
 
-# --- CLOSE WRAPPER ---
+# --- END of Page Wrapper ---
 st.markdown('</div></div>', unsafe_allow_html=True)
 
-# --- Footer ---
+# Footer
 st.markdown("---")
 st.caption("Created with ❤️ to support breast cancer awareness")

@@ -1,23 +1,16 @@
 import streamlit as st
 
-# Set page layout
+# Set layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- Full CSS Theme Styling ---
+# --- Custom CSS ---
 st.markdown("""
 <style>
-/* Page background */
-html, body, .stApp {
-    background-color: #ffe3ec !important;
-}
-
-/* Title */
 h1 {
     text-align: center;
-    color: #ad1457;
+    color: #FFFFFF;
 }
 
-/* Section titles */
 .section-title {
     font-size: 20px;
     font-weight: bold;
@@ -26,15 +19,7 @@ h1 {
     color: #ad1457;
 }
 
-/* Input fields background (select + number inputs) */
-div[data-baseweb="select"] > div,
-input[type="number"] {
-    background-color: #ffc3d9 !important;
-    color: black !important;
-    border-radius: 10px !important;
-}
-
-/* Form buttons (Predict + Reset) */
+/* Apply custom style to the Predict and Reset buttons */
 button[aria-label="🔍 Predict"],
 button[aria-label="🔄 Reset"] {
     background-color: #ad1457 !important;
@@ -48,29 +33,25 @@ button[aria-label="🔄 Reset"] {
     cursor: pointer !important;
 }
 
-/* Hover effect */
-button[aria-label="🔍 Predict"]:hover,
-button[aria-label="🔄 Reset"]:hover {
-    background-color: #c2185b !important;
-}
-
-/* Cursor pointer on all inputs */
+/* Inputs */
 input, select, textarea {
+    border-radius: 10px !important;
     cursor: pointer !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
-# --- Reset logic using query_params ---
+# --- Handle Reset logic ---
 if "reset" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-# --- Header ---
-st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+# --- UI Start ---
+st.markdown('<div class="container">', unsafe_allow_html=True)
+st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- FORM START ---
+# --- FORM ---
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -96,17 +77,20 @@ with st.form("input_form", clear_on_submit=False):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Button row inside form
+    # Buttons inside the form
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("🔄 Reset")
     with colB:
         predict = st.form_submit_button("🔍 Predict")
 
-# --- Logic for Buttons ---
+# --- Button Logic ---
 if reset:
     st.query_params["reset"] = "true"
     st.rerun()
 
 if predict:
     st.success("Prediction functionality coming soon...")
+
+# Close container
+st.markdown("</div>", unsafe_allow_html=True)

@@ -8,41 +8,52 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # ---- Custom CSS ----
-def apply_styles():
-    st.markdown("""
-    <style>
-    .app-container {
-        background-color: #f9b3c2;
-        padding: 3rem;
-    }
-    .white-card {
-        background-color: white;
-        padding: 3rem;
-        border-radius: 20px;
-        box-shadow: 0px 4px 12px rgba(0,0,0,0.1);
-    }
-    h1 {
-        text-align: center;
-        color: #C2185B;
-    }
-    .section {
-        background-color: #ffe0eb;
-        padding: 20px;
-        border-radius: 15px;
-        margin-top: 30px;
-        margin-bottom: 30px;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
+st.markdown("""
+<style>
+body {
+    background-color: #f9b3c2;
+}
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+}
+.white-box {
+    background-color: white;
+    padding: 3rem;
+    border-radius: 25px;
+    width: 85%;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+.section {
+    background-color: #ffe0eb;
+    padding: 25px;
+    border-radius: 15px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+h1 {
+    text-align: center;
+    color: #C2185B;
+}
+</style>
+""", unsafe_allow_html=True)
 apply_styles()
 
-# ---- Main UI ----
-st.markdown('<div class="app-container"><div class="white-card">', unsafe_allow_html=True)
+# ---- Page Wrapper (Card-style layout) ----
+st.markdown('<div class="main-container"><div class="white-box">', unsafe_allow_html=True)
 
-# ---- Title ----
+# Title and description inside the white card
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("#### Fill in the details below to generate predictions and insights.")
+
+# --- Everything else: form, fields, prediction, etc. ---
+# (use same form layout you already have — clinical & treatment)
+
+# ---- Close the white box and main container ----
+st.markdown('</div></div>', unsafe_allow_html=True)
+
 
 # ---- Form ----
 with st.form("patient_form"):

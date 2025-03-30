@@ -19,8 +19,9 @@ body {
     width: 90%;
     margin: 2rem auto;
     border-radius: 20px;
-    box-shadow: 0px 0px 12px rgba(0,0,0,0.05);
+    border: 5px solid white;
 }
+
 .section {
     background-color: #ffe0eb;
     padding: 25px;

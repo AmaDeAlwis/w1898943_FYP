@@ -9,7 +9,7 @@ st.markdown("""
 
 h1 {
     text-align: center;
-    color: #C2185B;
+    color: #FFFFFF;
 }
 
 .section-title {

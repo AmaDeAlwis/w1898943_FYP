@@ -1,33 +1,31 @@
 import streamlit as st
 
-# Set page config
+# Page setup
 st.set_page_config(page_title="Breast Cancer UI", layout="wide")
 
-# Custom CSS to match the layout
+# Fix CSS to simulate white border by using a background wrapper div
 st.markdown("""
 <style>
-/* Full white background */
-body {
+html, body {
     background-color: white;
 }
 
-/* Centered pink card with rounded corners */
-.pink-wrapper {
+.main-container {
     background-color: #f9b3c2;
-    border-radius: 35px;
-    margin: 40px auto;
+    border-radius: 30px;
     padding: 50px;
-    width: 85%;
-    box-shadow: 0px 0px 20px rgba(0,0,0,0.05);
+    max-width: 1000px;
+    margin: 50px auto;
+    box-shadow: 0px 0px 12px rgba(0,0,0,0.08);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# Pink wrapper start
-st.markdown('<div class="pink-wrapper">', unsafe_allow_html=True)
+# Main pink box (centered with margin)
+st.markdown('<div class="main-container">', unsafe_allow_html=True)
 
-# (Leave empty or insert title/inputs here later)
-# st.markdown("<h1 style='text-align:center;'>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+# Title inside the pink container
+st.markdown("<h1 style='text-align:center; color:#C2185B;'>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# Pink wrapper end
-st.markdown('</div>', unsafe_allow_html=True)
+# End the pink container
+st.markdown("</div>", unsafe_allow_html=True)

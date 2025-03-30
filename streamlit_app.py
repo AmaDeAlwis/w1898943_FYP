@@ -14,11 +14,12 @@ html, body {
     background-color: #f9b3c2;
     border-radius: 30px;
     padding: 60px;
-    max-width: 95%;
-    min-height: 90vh;
-    margin: 30px auto;
-    box-shadow: 0px 0px 12px rgba(0,0,0,0.08);
+    width: 98vw;             /* Full width of the viewport */
+    min-height: 95vh;        /* Full height of the viewport */
+    margin: 20px auto;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.05);
 }
+
 </style>
 """, unsafe_allow_html=True)
 

@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Set page layout
+# Set layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # --- Custom CSS ---
@@ -19,8 +19,9 @@ h1 {
     color: #ad1457;
 }
 
-/* Properly target all form submit buttons */
-button[type="submit"] {
+/* Apply custom style to the Predict and Reset buttons */
+button[aria-label="🔍 Predict"],
+button[aria-label="🔄 Reset"] {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold !important;
@@ -32,7 +33,7 @@ button[type="submit"] {
     cursor: pointer !important;
 }
 
-/* Input cursor and border-radius */
+/* Inputs */
 input, select, textarea {
     border-radius: 10px !important;
     cursor: pointer !important;
@@ -40,17 +41,17 @@ input, select, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# --- Reset logic using query_params ---
+# --- Handle Reset logic ---
 if "reset" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-# --- UI Header ---
+# --- UI Start ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
-st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- FORM START ---
+# --- FORM ---
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -76,12 +77,12 @@ with st.form("input_form", clear_on_submit=False):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Button Layout in Form
+    # Buttons inside the form
     colA, colB = st.columns(2)
     with colA:
-        reset = st.form_submit_button("🔄 Reset")
+        reset = st.form_submit_button("🔄 RESET")
     with colB:
-        predict = st.form_submit_button("🔍 Predict")
+        predict = st.form_submit_button("🔍 PREDICT")
 
 # --- Button Logic ---
 if reset:

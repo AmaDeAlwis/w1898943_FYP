@@ -19,17 +19,17 @@ h1 {
     color: #ad1457;
 }
 
-/* Buttons */
-.stButton>button {
+/* Custom buttons style */
+div.stButton > button {
     background-color: #ad1457 !important;
     color: white !important;
+    font-weight: bold !important;
+    text-transform: uppercase;
+    border: none;
     border-radius: 10px;
-    padding: 0.5rem 1.5rem;
+    padding: 0.6rem 1.5rem;
     margin-top: 1rem;
     cursor: pointer;
-    border: none;
-    font-weight: bold;
-    text-transform: uppercase;
 }
 
 /* Input hover/cursor style */

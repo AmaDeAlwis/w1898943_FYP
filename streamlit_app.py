@@ -19,24 +19,20 @@ h1 {
     color: #ad1457;
 }
 
+/* Buttons */
 .stButton>button {
-    background-color: #d63384;
-    color: white;
+    background-color: #ad1457 !important;
+    color: white !important;
     border-radius: 10px;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem 1.5rem;
     margin-top: 1rem;
     cursor: pointer;
     border: none;
     font-weight: bold;
+    text-transform: uppercase;
 }
 
-/* Custom layout for buttons */
-.button-row {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 1rem;
-}
-
+/* Input hover/cursor style */
 input, select, textarea {
     border-radius: 10px !important;
     cursor: pointer !important;
@@ -76,15 +72,14 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
 
-    # Placeholder for button row using columns to align left and right
+    # Button layout
     col_left, col_right = st.columns(2)
-
     with col_left:
-        submit = st.form_submit_button("🔍 Predict")
+        reset = st.form_submit_button("🔄 RESET")
     with col_right:
-        reset = st.form_submit_button("🔄 Reset")
+        submit = st.form_submit_button("🔍 PREDICT")
 
-# --- RESET LOGIC (outside form) ---
+# --- RESET LOGIC ---
 if reset:
     st.experimental_rerun()
 

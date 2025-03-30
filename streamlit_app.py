@@ -19,17 +19,16 @@ h1 {
     margin-bottom: 0.5rem;
     color: #ad1457;
 }
-
-.section {
-    background-color: #ffe6ee;
-    padding: 25px;
+.form-container {
+    background-color: #ffe6f0;
+    padding: 2rem;
     border-radius: 15px;
-    margin-top: 30px;
-    margin-bottom: 30px;
-    border: 3px solid white;  /* Thicker and visible white border */
+    border: 5px solid white;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.05);
 }
-</style>
-""", unsafe_allow_html=True)
+
 
 
 .stButton>button {
@@ -50,7 +49,7 @@ input, select, textarea {
 st.markdown('<div class="container">', unsafe_allow_html=True)
 
 st.markdown("<h1>🎀 Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
+st.markdown('<div class="form-container">', unsafe_allow_html=True)
 
 # Form Start
 with st.form("input_form"):
@@ -86,8 +85,8 @@ with st.form("input_form"):
         submit = st.form_submit_button("🔍 Predict")
 
 # Close Container
-div_end = "</div>"
-st.markdown(div_end, unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
+
 
 # Reset Logic
 if reset:

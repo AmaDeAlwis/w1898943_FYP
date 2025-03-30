@@ -20,6 +20,18 @@ h1 {
     color: #ad1457;
 }
 
+.section {
+    background-color: #ffe6ee;
+    padding: 25px;
+    border-radius: 15px;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    border: 3px solid white;  /* Thicker and visible white border */
+}
+</style>
+""", unsafe_allow_html=True)
+
+
 .stButton>button {
     background-color: #d63384;
     color: white;

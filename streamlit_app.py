@@ -1,4 +1,34 @@
 import streamlit as st
+import torch
+import torch.nn.functional as F
+import torch.nn as nn
+import numpy as np
+import joblib
+from torch_geometric.data import Data
+from pymongo import MongoClient
+import datetime
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics.pairwise import euclidean_distances
+from your_gcn_file import SurvivalGNN  # Adjust the path if needed
+
+# Load saved StandardScaler (if saved during training)
+scaler = joblib.load("scaler.pkl")  # Make sure you've saved this earlier
+
+# Load GCN model
+gcn_model = SurvivalGNN(
+    in_channels=15,  # Adjust if needed
+    hidden_channels=64,
+    out_channels_time=1,
+    out_channels_event=1
+)
+gcn_model.load_state_dict(torch.load("gcn_model.pt"))
+gcn_model.eval()
+
+# Connect to MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["breast_cancer_survival"]
+collection = db["patient_records"]
+
 
 # Set layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")

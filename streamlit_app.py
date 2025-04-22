@@ -21,7 +21,7 @@ gcn_model = SurvivalGNN(
     out_channels_time=1,
     out_channels_event=1
 )
-gcn_model.load_state_dict(torch.load("gcn_model.pt"))
+gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt"))
 gcn_model.eval()
 
 # Connect to MongoDB

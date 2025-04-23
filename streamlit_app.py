@@ -154,6 +154,9 @@ if predict:
     her2_neutral,
     her2_undef
 ]).reshape(1, -1)
+   st.write("🧪 Input shape:", input_features.shape)
+   st.write("🧪 Input preview:", input_features)
+   st.write("🧪 Scaler expects:", scaler.n_features_in_, "features")
 
 
 

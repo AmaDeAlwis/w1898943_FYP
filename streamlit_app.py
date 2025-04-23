@@ -13,15 +13,12 @@ from gcn_model_class import SurvivalGNN
 
 # Load saved StandardScaler (if saved during training)
 scaler = joblib.load("scaler.pkl")  # Make sure you've saved this earlier
-
-# Load GCN model
 gcn_model = SurvivalGNN(
-    in_channels=15,  # Adjust if needed
-    hidden_channels=64,
+    in_channels=15,  # replace with actual number of features
     out_channels_time=1,
     out_channels_event=1
 )
-gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt"))
+gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device('cpu')))
 gcn_model.eval()
 
 # Connect to MongoDB

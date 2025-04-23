@@ -9,7 +9,7 @@ from pymongo import MongoClient
 import datetime
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import euclidean_distances
-from your_gcn_file import SurvivalGNN  # Adjust the path if needed
+from gcn_model_class import SurvivalGNN
 
 # Load saved StandardScaler (if saved during training)
 scaler = joblib.load("scaler.pkl")  # Make sure you've saved this earlier

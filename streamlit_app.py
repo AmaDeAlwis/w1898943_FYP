@@ -1,7 +1,8 @@
 import streamlit as st
-import os
 # Set layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
+
+import os
 st.write("Current working directory:", os.getcwd())
 st.write("Files in directory:", os.listdir())
 

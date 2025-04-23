@@ -136,27 +136,40 @@ if predict:
     surgery_conserving = 1 if surgery == "Breast-conserving" else 0
     surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
 
-    # Input features (must match training feature order!)
+        # Input features (must match training feature order!)
     input_features = np.array([
-    age,
-    chemotherapy,
-    er_status,
-    hormone_therapy,
-    menopausal_status,
-    lymph_nodes_examined,
-    pr_status,
-    radiotherapy,
-    tumor_stage,
-    surgery_conserving,
-    surgery_mastectomy,
-    her2_gain,
-    her2_loss,
-    her2_neutral,
-    her2_undef
-]).reshape(1, -1)
-   st.write("🧪 Input shape:", input_features.shape)
-   st.write("🧪 Input preview:", input_features)
-   st.write("🧪 Scaler expects:", scaler.n_features_in_, "features")
+        age,
+        chemotherapy,
+        er_status,
+        hormone_therapy,
+        menopausal_status,
+        lymph_nodes_examined,
+        pr_status,
+        radiotherapy,
+        tumor_stage,
+        surgery_conserving,
+        surgery_mastectomy,
+        her2_gain,
+        her2_loss,
+        her2_neutral,
+        her2_undef
+    ]).reshape(1, -1)
+
+    # Debug info
+    st.subheader("🔍 DEBUG INFO")
+    try:
+        st.write("🧪 Input shape:", input_features.shape)
+        st.write("🧪 Input preview:", input_features.tolist())
+        st.write("🧪 Scaler expects:", scaler.n_features_in_, "features")
+    except Exception as debug_err:
+        st.error(f"Debug check failed: {debug_err}")
+
+    # Scale features safely
+    try:
+        input_scaled = scaler.transform(input_features)
+    except Exception as scale_err:
+        st.error(f"❌ Error during scaler.transform: {scale_err}")
+        st.stop()
 
 
 

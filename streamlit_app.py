@@ -119,7 +119,6 @@ if reset:
     st.rerun()
 
 if predict:
-    if predict:
     # Encode categorical inputs
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

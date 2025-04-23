@@ -123,27 +123,38 @@ if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0
     pr_status = 1 if pr_status == "Positive" else 0
-    her2_encoding = {"Neutral": 0, "Loss": 1, "Gain": 2, "Undef": 3}
-    her2_status = her2_encoding[her2_status]
+    # One-hot encode HER2 Status
+    her2_neutral = 1 if her2_status == "Neutral" else 0
+    her2_loss = 1 if her2_status == "Loss" else 0
+    her2_gain = 1 if her2_status == "Gain" else 0
+    her2_undef = 1 if her2_status == "Undef" else 0
+
     chemotherapy = 1 if chemotherapy == "Yes" else 0
     radiotherapy = 1 if radiotherapy == "Yes" else 0
     hormone_therapy = 1 if hormone_therapy == "Yes" else 0
-    surgery = 1 if surgery == "Mastectomy" else 0
+    # One-hot encode Surgery Type (Breast-conserving vs Mastectomy)
+    surgery_conserving = 1 if surgery == "Breast-conserving" else 0
+    surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
 
     # Input features (must match training feature order!)
     input_features = np.array([
-        age,
-        menopausal_status,
-        tumor_stage,
-        lymph_nodes_examined,
-        er_status,
-        pr_status,
-        her2_status,
-        chemotherapy,
-        radiotherapy,
-        hormone_therapy,
-        surgery
-    ]).reshape(1, -1)
+    age,
+    menopausal_status,
+    tumor_stage,
+    lymph_nodes_examined,
+    er_status,
+    pr_status,
+    chemotherapy,
+    radiotherapy,
+    hormone_therapy,
+    her2_neutral,
+    her2_loss,
+    her2_gain,
+    her2_undef,
+    surgery_conserving,
+    surgery_mastectomy
+]).reshape(1, -1)  # 15 features
+
 
     # Scale features
     input_scaled = scaler.transform(input_features)

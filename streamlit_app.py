@@ -139,21 +139,22 @@ if predict:
     # Input features (must match training feature order!)
     input_features = np.array([
     age,
-    menopausal_status,
-    tumor_stage,
-    lymph_nodes_examined,
-    er_status,
-    pr_status,
     chemotherapy,
-    radiotherapy,
+    er_status,
     hormone_therapy,
-    her2_neutral,
-    her2_loss,
-    her2_gain,
-    her2_undef,
+    menopausal_status,
+    lymph_nodes_examined,
+    pr_status,
+    radiotherapy,
+    tumor_stage,
     surgery_conserving,
-    surgery_mastectomy
-]).reshape(1, -1)  # 15 features
+    surgery_mastectomy,
+    her2_gain,
+    her2_loss,
+    her2_neutral,
+    her2_undef
+]).reshape(1, -1)
+
 
 
     # Scale features

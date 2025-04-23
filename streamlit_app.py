@@ -2,10 +2,6 @@ import streamlit as st
 # Set layout
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-import os
-st.write("Current working directory:", os.getcwd())
-st.write("Files in directory:", os.listdir())
-
 import torch
 import torch.nn.functional as F
 import torch.nn as nn

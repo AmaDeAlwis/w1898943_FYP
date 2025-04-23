@@ -1,4 +1,8 @@
 import streamlit as st
+import os
+st.write("Current working directory:", os.getcwd())
+st.write("Files in directory:", os.listdir())
+
 import torch
 import torch.nn.functional as F
 import torch.nn as nn

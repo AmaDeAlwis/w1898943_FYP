@@ -109,9 +109,9 @@ with st.form("input_form", clear_on_submit=False):
     # Buttons inside the form
     colA, colB = st.columns(2)
     with colA:
-        reset = st.form_submit_button("🔄 Reset")
+        reset = st.form_submit_button("RESET")
     with colB:
-        predict = st.form_submit_button("🔍 Predict")
+        predict = st.form_submit_button("PREDICT")
 
 # --- Button Logic ---
 if reset:
@@ -119,7 +119,73 @@ if reset:
     st.rerun()
 
 if predict:
-    st.success("Prediction functionality coming soon...")
+    if predict:
+    # Encode categorical inputs
+    menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
+    er_status = 1 if er_status == "Positive" else 0
+    pr_status = 1 if pr_status == "Positive" else 0
+    her2_encoding = {"Neutral": 0, "Loss": 1, "Gain": 2, "Undef": 3}
+    her2_status = her2_encoding[her2_status]
+    chemotherapy = 1 if chemotherapy == "Yes" else 0
+    radiotherapy = 1 if radiotherapy == "Yes" else 0
+    hormone_therapy = 1 if hormone_therapy == "Yes" else 0
+    surgery = 1 if surgery == "Mastectomy" else 0
+
+    # Input features (must match training feature order!)
+    input_features = np.array([
+        age,
+        menopausal_status,
+        tumor_stage,
+        lymph_nodes_examined,
+        er_status,
+        pr_status,
+        her2_status,
+        chemotherapy,
+        radiotherapy,
+        hormone_therapy,
+        surgery
+    ]).reshape(1, -1)
+
+    # Scale features
+    input_scaled = scaler.transform(input_features)
+    x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+
+    # Create dummy graph (single-node, self-loop)
+    edge_index = torch.tensor([[0], [0]], dtype=torch.long)
+    graph_data = Data(x=x_tensor, edge_index=edge_index)
+
+    # Predict
+    gcn_model.eval()
+    with torch.no_grad():
+        time_output, event_output = gcn_model(graph_data)
+        survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
+        survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
+
+    # Display
+    st.success(f" 5-Year Survival Probability: {survival_5yr:.2f}")
+    st.success(f" 10-Year Survival Probability: {survival_10yr:.2f}")
+
+    # Save to MongoDB
+    patient_data = {
+        "timestamp": datetime.datetime.now(),
+        "age": age,
+        "menopausal_status": menopausal_status,
+        "tumor_stage": tumor_stage,
+        "lymph_nodes_examined": lymph_nodes_examined,
+        "er_status": er_status,
+        "pr_status": pr_status,
+        "her2_status": her2_status,
+        "chemotherapy": chemotherapy,
+        "radiotherapy": radiotherapy,
+        "hormone_therapy": hormone_therapy,
+        "surgery": surgery,
+        "survival_5yr": survival_5yr,
+        "survival_10yr": survival_10yr
+    }
+
+    collection.insert_one(patient_data)
+    st.info("Patient prediction record saved to MongoDB.")
+
 
 # Close container
 st.markdown("</div>", unsafe_allow_html=True)

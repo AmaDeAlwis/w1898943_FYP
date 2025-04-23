@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+# Set layout
+st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.write("Current working directory:", os.getcwd())
 st.write("Files in directory:", os.listdir())
 
@@ -31,8 +33,7 @@ db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
 
-# Set layout
-st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
+
 
 # --- Custom CSS ---
 st.markdown("""

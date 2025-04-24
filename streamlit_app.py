@@ -173,30 +173,37 @@ if predict:
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
 # Display Predictions Nicely
     st.markdown(f"""
-        <div style='
-            background-color: #ffe4ec;
-            padding: 1.5rem;
-            border-radius: 20px;
-            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
-            margin-top: 2rem;
-            text-align: center;
-            width: 90%;
-            margin-left: auto;
-            margin-right: auto;
-        '>
-            <h3 style='color: #c2185b;'> Survival Predictions</h3>
-            <p style='font-size: 20px; font-weight: bold; color: #880e4f;'>
-                🩺 5-Year Survival Probability: 
-                <span style="color:#d81b60;">{survival_5yr:.2f}</span><br><br>
-                🩺 10-Year Survival Probability: 
+    <div style='
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
+        margin-top: 2rem;
+        text-align: center;
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    '>
+        <h3 style='color: #c2185b;'>🎯 Survival Predictions</h3>
+
+        <div style='margin-top: 1rem;'>
+            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
+                🩺 5-Year Survival Probability:
+                <span style="color:#d81b60;">{survival_5yr:.2f}</span>
+            </p>
+        </div>
+
+        <div style='margin-top: 1.5rem;'>
+            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
+                🩺 10-Year Survival Probability:
                 <span style="color:#d81b60;">{survival_10yr:.2f}</span>
             </p>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+""", unsafe_allow_html=True)
+  
 
-
-
-    # Save to MongoDB
+# Save to MongoDB
     patient_data = {
         "timestamp": datetime.datetime.now(),
         "age": age,
@@ -229,9 +236,6 @@ if predict:
              Patient prediction record successfully saved to MongoDB Atlas.
         </div>
         """, unsafe_allow_html=True)
-
-    
-
 
 # Close container
 st.markdown("</div>", unsafe_allow_html=True)

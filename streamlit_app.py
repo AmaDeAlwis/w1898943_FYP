@@ -92,9 +92,21 @@ with st.form("input_form", clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
+    st.session_state.update({
+        "age": 0,
+        "menopausal_status": None,
+        "tumor_stage": None,
+        "lymph_nodes_examined": 0,
+        "er_status": None,
+        "pr_status": None,
+        "her2_status": None,
+        "chemotherapy": None,
+        "surgery": None,
+        "radiotherapy": None,
+        "hormone_therapy": None,
+    })
     st.rerun()
+
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

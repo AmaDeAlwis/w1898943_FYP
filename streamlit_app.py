@@ -172,22 +172,28 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
 # Display Predictions Nicely
-    st.markdown("""
-        <div style='
-        background-color: #fff0f5;
-        padding: 1.5rem;
-        border-radius: 15px;
-        box-shadow: 2px 2px 12px rgba(173, 20, 87, 0.2);
-        margin-top: 2rem;
-        text-align: center;
-    '>
-        <h3 style='color: #ad1457;'> Survival Predictions</h3>
-        <p style='font-size: 20px; font-weight: bold; color: #4b0082;'>
-            🩺 5-Year Survival Probability: <span style="color:#00695c;">{:.2f}</span><br><br>
-            🩺 10-Year Survival Probability: <span style="color:#00695c;">{:.2f}</span>
-        </p>
-    </div>
-    """.format(survival_5yr, survival_10yr), unsafe_allow_html=True)
+        st.markdown(f"""
+            <div style='
+            background-color: #ffe4ec;
+            padding: 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
+            margin-top: 2rem;
+            text-align: center;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        '>
+            <h3 style='color: #c2185b;'> Survival Predictions</h3>
+            <p style='font-size: 20px; font-weight: bold; color: #880e4f;'>
+                🩺 5-Year Survival Probability: 
+                <span style="color:#d81b60;">{survival_5yr:.2f}</span><br><br>
+                🩺 10-Year Survival Probability: 
+                <span style="color:#d81b60;">{survival_10yr:.2f}</span>
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+
 
 
     # Save to MongoDB
@@ -209,7 +215,20 @@ if predict:
     }
 
     collection.insert_one(patient_data)
-    st.info("Patient prediction record saved to MongoDB.")
+        st.markdown("""
+        <div style='
+            margin-top: 1.5rem;
+            background-color: #fce4ec;
+            padding: 1rem;
+            border-radius: 15px;
+            color: #880e4f;
+            font-weight: bold;
+            text-align: center;
+        '>
+             Patient prediction record successfully saved to MongoDB Atlas.
+        </div>
+    """, unsafe_allow_html=True)
+
 
 
 # Close container

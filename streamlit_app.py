@@ -48,8 +48,7 @@ h1 {
     margin-bottom: 0.5rem;
     color: #ad1457;
 }
-button[aria-label=" Predict"],
-button[aria-label=" Reset"] {
+button[kind="secondary"] {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold !important;
@@ -71,6 +70,7 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
+# --- FORM ---
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -98,16 +98,13 @@ with st.form("input_form", clear_on_submit=False):
         reset = st.form_submit_button("RESET")
     with colB:
         predict = st.form_submit_button("PREDICT")
+
+# --- Handle Reset Logic After Form ---
 if reset:
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]
+    st.query_params["reset"] = "true"
     st.rerun()
 
+# --- Prediction Logic ---
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

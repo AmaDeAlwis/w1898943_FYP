@@ -57,18 +57,19 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-if st.query_params.get("reset"):
+# Initialize or clear state
+if 'reset' not in st.session_state:
+    st.session_state['reset'] = False
+
+if st.session_state['reset']:
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.query_params.clear()
-    st.experimental_rerun()
+        "surgery", "radiotherapy", "hormone_therapy"]:
+        st.session_state.pop(key, None)
+    st.session_state['reset'] = False
 
-with st.form("input_form",clear_on_submit=False):
+with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
         age = st.number_input("Age", min_value=20, max_value=96, key="age")
@@ -93,8 +94,8 @@ with st.form("input_form",clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    st.session_state.clear()
-    st.rerun()
+    st.session_state['reset'] = True
+    st.experimental_rerun()
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

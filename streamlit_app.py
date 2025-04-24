@@ -93,8 +93,8 @@ with st.form("input_form",clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
     if reset:
-        st.query_params["reset"] = "true"
-        st.experimental_rerun()
+    st.session_state.clear()
+    st.rerun()
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

@@ -23,6 +23,17 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
+# --- Handle Reset BEFORE Form ---
+if st.query_params.get("reset", None):
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        st.session_state.pop(key, None)
+    st.query_params.clear()
+    st.rerun()
+
 # --- Custom CSS ---
 st.markdown("""
 <style>
@@ -30,7 +41,6 @@ h1 {
     text-align: center;
     color: #FFFFFF;
 }
-
 .section-title {
     font-size: 20px;
     font-weight: bold;
@@ -38,7 +48,6 @@ h1 {
     margin-bottom: 0.5rem;
     color: #ad1457;
 }
-
 button[aria-label=" Predict"],
 button[aria-label=" Reset"] {
     background-color: #ad1457 !important;
@@ -51,7 +60,6 @@ button[aria-label=" Reset"] {
     margin-top: 1rem !important;
     cursor: pointer !important;
 }
-
 input, select, textarea {
     border-radius: 10px !important;
     cursor: pointer !important;
@@ -62,18 +70,6 @@ input, select, textarea {
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
-
-# --- Handle Reset BEFORE Form ---
-if st.query_params.get("reset", None):
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]  # This clears the value properly
-    st.query_params.clear()
-    st.rerun()
 
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
@@ -99,30 +95,12 @@ with st.form("input_form", clear_on_submit=False):
 
     colA, colB = st.columns(2)
     with colA:
-        reset = st.form_submit_button("RESET")   
-    if reset:
-        st.query_params["reset"] = "true"
-        st.rerun()
-
+        reset = st.form_submit_button("RESET")
+        if reset:
+            st.query_params["reset"] = "true"
+            st.rerun()
     with colB:
         predict = st.form_submit_button("PREDICT")
-
-if reset:
-    st.session_state.update({
-        "age": 0,
-        "menopausal_status": None,
-        "tumor_stage": None,
-        "lymph_nodes_examined": 0,
-        "er_status": None,
-        "pr_status": None,
-        "her2_status": None,
-        "chemotherapy": None,
-        "surgery": None,
-        "radiotherapy": None,
-        "hormone_therapy": None,
-    })
-    st.rerun()
-
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

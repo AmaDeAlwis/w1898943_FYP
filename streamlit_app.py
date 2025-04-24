@@ -171,7 +171,7 @@ if predict:
         time_output, event_output = gcn_model(graph_data)
         survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
-# Display Predictions Nicely
+
     st.markdown(f"""
     <div style='
         background-color: #ffffff;
@@ -184,24 +184,20 @@ if predict:
         margin-left: auto;
         margin-right: auto;
     '>
-        <h3 style='color: #c2185b;'>🎯 Survival Predictions</h3>
+        <h3 style='color: #c2185b;'> Survival Predictions</h3>
 
-        <div style='margin-top: 1rem;'>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
-                🩺 5-Year Survival Probability:
-                <span style="color:#d81b60;">{survival_5yr:.2f}</span>
-            </p>
-        </div>
+        <p style='font-size: 22px; font-weight: bold; color: #880e4f; margin-top: 1.5rem;'>
+         5-Year Survival Probability: 
+        <span style="color:#d81b60;">{survival_5yr:.2f}</span>
+        </p>
 
-        <div style='margin-top: 1.5rem;'>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
-                🩺 10-Year Survival Probability:
-                <span style="color:#d81b60;">{survival_10yr:.2f}</span>
-            </p>
-        </div>
+        <p style='font-size: 22px; font-weight: bold; color: #880e4f; margin-top: 1.5rem;'>
+             10-Year Survival Probability: 
+             <span style="color:#d81b60;">{survival_10yr:.2f}</span>
+        </p>
     </div>
-""", unsafe_allow_html=True)
-  
+    """, unsafe_allow_html=True)
+
 
 # Save to MongoDB
     patient_data = {

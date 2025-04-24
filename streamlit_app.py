@@ -129,31 +129,28 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()
         survival_10yr = torch.sigmoid(event_output[0]).item()
 
+    # ✅ Fixed rendering block
     st.markdown(f"""
-    <div style='
-        background-color: #ffffff;
-        padding: 2rem;
-        border-radius: 20px;
-        box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
-        margin-top: 2rem;
-        text-align: center;
-        width: 90%;
-        margin-left: auto;
-        margin-right: auto;
-    '>
-        <h3 style='color: #c2185b;'>🎯 Survival Predictions</h3>
+    <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
+                text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
+        <h3 style='color: #c2185b;'>🌟 Survival Predictions</h3>
 
-        <div style='margin-bottom: 1.5rem;'>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year Survival Probability: 
-            <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
+        <div style='margin-top: 1.5rem;'>
+            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
+                🩺 5-Year Survival Probability:
+                <span style="color:#d81b60;">{survival_5yr:.2f}</span>
+            </p>
         </div>
 
-        <div>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year Survival Probability: 
-            <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
+        <div style='margin-top: 1.5rem;'>
+            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>
+                🩺 10-Year Survival Probability:
+                <span style="color:#d81b60;">{survival_10yr:.2f}</span>
+            </p>
         </div>
     </div>
-""", unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
 
     patient_data = {
         "timestamp": datetime.datetime.now(),
@@ -174,7 +171,7 @@ if predict:
     collection.insert_one(patient_data)
 
     st.markdown("""
-    <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem; 
+    <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem;
                 border-radius: 15px; color: #880e4f; font-weight: bold; text-align: center;'>
         Patient prediction record successfully saved to MongoDB Atlas.
     </div>

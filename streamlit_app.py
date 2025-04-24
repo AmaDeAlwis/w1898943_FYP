@@ -1,7 +1,5 @@
 import streamlit as st
 import torch
-import torch.nn.functional as F
-import torch.nn as nn
 import numpy as np
 import joblib
 from torch_geometric.data import Data
@@ -23,17 +21,6 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Handle Reset BEFORE Form ---
-if st.query_params.get("reset", None):
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        st.session_state.pop(key, None)
-    st.query_params.clear()
-    st.rerun()
-
 # --- Custom CSS ---
 st.markdown("""
 <style>
@@ -48,7 +35,7 @@ h1 {
     margin-bottom: 0.5rem;
     color: #ad1457;
 }
-button[kind="secondary"] {
+button[kind="primary"] {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold !important;
@@ -70,8 +57,17 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- FORM ---
-with st.form("input_form", clear_on_submit=False):
+# --- Reset Handler ---
+if st.query_params.get("reset") == "true":
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"]:
+        st.session_state.pop(key, None)
+    st.query_params.clear()
+    st.rerun()
+
+with st.form("input_form"):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
@@ -99,12 +95,10 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# --- Handle Reset Logic After Form ---
-if reset:
-    st.query_params["reset"] = "true"
-    st.rerun()
+    if reset:
+        st.query_params["reset"] = "true"
+        st.rerun()
 
-# --- Prediction Logic ---
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

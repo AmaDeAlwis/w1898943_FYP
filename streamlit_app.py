@@ -20,15 +20,24 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Reset Handling ---
-if "reset_triggered" in st.session_state and st.session_state.reset_triggered:
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        st.session_state.pop(key, None)
-    st.session_state.reset_triggered = False
+# Initialize session state for all inputs
+fields = [
+    "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+    "er_status", "pr_status", "her2_status", "chemotherapy",
+    "surgery", "radiotherapy", "hormone_therapy"
+]
+def initialize_fields():
+    for field in fields:
+        if field not in st.session_state:
+            st.session_state[field] = ""
+initialize_fields()
+
+# --- Handle RESET ---
+if st.query_params.get("reset") == "true":
+    for field in fields:
+        st.session_state[field] = ""
+    st.query_params.clear()
+    st.experimental_rerun()
 
 # --- Custom CSS ---
 st.markdown("""
@@ -50,31 +59,30 @@ input, select, textarea { border-radius: 10px !important; cursor: pointer !impor
 </style>
 """, unsafe_allow_html=True)
 
-# --- Header ---
+# --- UI ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- Form ---
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("Age", min_value=20, max_value=96, key="age")
-        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
-        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, key="lymph_nodes_examined")
+        age = st.text_input("Age", value=st.session_state.age)
+        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], index=["", "Pre-menopausal", "Post-menopausal"].index(st.session_state.menopausal_status))
+        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], index=["", 1, 2, 3, 4].index(st.session_state.tumor_stage) if st.session_state.tumor_stage in [1,2,3,4] else 0)
+        lymph_nodes_examined = st.text_input("Lymph Nodes Examined", value=st.session_state.lymph_nodes_examined)
     with col2:
-        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
-        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
-        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], index=["", "Positive", "Negative"].index(st.session_state.er_status))
+        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], index=["", "Positive", "Negative"].index(st.session_state.pr_status))
+        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], index=["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state.her2_status))
 
     col3, col4 = st.columns(2)
     with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
-        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
+        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], index=["", "Yes", "No"].index(st.session_state.chemotherapy))
+        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], index=["", "Breast-conserving", "Mastectomy"].index(st.session_state.surgery))
     with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
-        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], index=["", "Yes", "No"].index(st.session_state.radiotherapy))
+        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], index=["", "Yes", "No"].index(st.session_state.hormone_therapy))
 
     colA, colB = st.columns(2)
     with colA:
@@ -82,99 +90,100 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# --- RESET logic ---
+# Save input values
+st.session_state.age = age
+st.session_state.menopausal_status = menopausal_status
+st.session_state.tumor_stage = tumor_stage
+st.session_state.lymph_nodes_examined = lymph_nodes_examined
+st.session_state.er_status = er_status
+st.session_state.pr_status = pr_status
+st.session_state.her2_status = her2_status
+st.session_state.chemotherapy = chemotherapy
+st.session_state.surgery = surgery
+st.session_state.radiotherapy = radiotherapy
+st.session_state.hormone_therapy = hormone_therapy
+
 if reset:
-    st.session_state.reset_triggered = True
+    st.query_params["reset"] = "true"
     st.experimental_rerun()
 
-# --- PREDICT logic ---
 if predict:
-    required_fields = [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]
-    missing = [f for f in required_fields if not st.session_state.get(f)]
-
+    # Validation
+    missing = [k for k in fields if not st.session_state.get(k)]
     if missing:
-        st.error("⚠️ Please fill in all required fields before submitting.")
+        st.warning("Please fill all the required fields.")
     else:
-        # Convert categorical to numeric
-        age = st.session_state.get("age")
-        menopausal_status = 1 if st.session_state.get("menopausal_status") == "Post-menopausal" else 0
-        tumor_stage = st.session_state.get("tumor_stage")
-        lymph_nodes_examined = st.session_state.get("lymph_nodes_examined")
-        er_status = 1 if st.session_state.get("er_status") == "Positive" else 0
-        pr_status = 1 if st.session_state.get("pr_status") == "Positive" else 0
-        her2_val = st.session_state.get("her2_status")
-        her2_neutral = 1 if her2_val == "Neutral" else 0
-        her2_loss = 1 if her2_val == "Loss" else 0
-        her2_gain = 1 if her2_val == "Gain" else 0
-        her2_undef = 1 if her2_val == "Undef" else 0
-        chemotherapy = 1 if st.session_state.get("chemotherapy") == "Yes" else 0
-        radiotherapy = 1 if st.session_state.get("radiotherapy") == "Yes" else 0
-        hormone_therapy = 1 if st.session_state.get("hormone_therapy") == "Yes" else 0
-        surgery_val = st.session_state.get("surgery")
-        surgery_conserving = 1 if surgery_val == "Breast-conserving" else 0
-        surgery_mastectomy = 1 if surgery_val == "Mastectomy" else 0
+        try:
+            input_features = np.array([
+                float(age),
+                1 if chemotherapy == "Yes" else 0,
+                1 if er_status == "Positive" else 0,
+                1 if hormone_therapy == "Yes" else 0,
+                1 if menopausal_status == "Post-menopausal" else 0,
+                float(lymph_nodes_examined),
+                1 if pr_status == "Positive" else 0,
+                1 if radiotherapy == "Yes" else 0,
+                int(tumor_stage),
+                1 if surgery == "Breast-conserving" else 0,
+                1 if surgery == "Mastectomy" else 0,
+                1 if her2_status == "Gain" else 0,
+                1 if her2_status == "Loss" else 0,
+                1 if her2_status == "Neutral" else 0,
+                1 if her2_status == "Undef" else 0
+            ]).reshape(1, -1)
 
-        input_features = np.array([
-            age, chemotherapy, er_status, hormone_therapy, menopausal_status,
-            lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
-            surgery_conserving, surgery_mastectomy, her2_gain,
-            her2_loss, her2_neutral, her2_undef
-        ]).reshape(1, -1)
+            input_scaled = scaler.transform(input_features)
+            x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+            edge_index = torch.tensor([[0], [0]], dtype=torch.long)
+            graph_data = Data(x=x_tensor, edge_index=edge_index)
 
-        input_scaled = scaler.transform(input_features)
-        x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
-        edge_index = torch.tensor([[0], [0]], dtype=torch.long)
-        graph_data = Data(x=x_tensor, edge_index=edge_index)
+            with torch.no_grad():
+                time_output, event_output = gcn_model(graph_data)
+                survival_5yr = torch.sigmoid(time_output[0]).item()
+                survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        with torch.no_grad():
-            time_output, event_output = gcn_model(graph_data)
-            survival_5yr = torch.sigmoid(time_output[0]).item()
-            survival_10yr = torch.sigmoid(event_output[0]).item()
-
-        st.markdown(f"""
-            <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
-                 box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
-                 text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
-                <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                <div style='margin-bottom: 1.5rem;'>
-                    <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year Survival Probability:
-                        <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
+            st.markdown(f"""
+                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                     box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
+                     text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
+                    <h3 style='color: #c2185b;'> Survival Predictions</h3>
+                    <div style='margin-bottom: 1.5rem;'>
+                        <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year Survival Probability:
+                            <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
+                    </div>
+                    <div>
+                        <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year Survival Probability:
+                            <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
+                    </div>
                 </div>
-                <div>
-                    <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year Survival Probability:
-                        <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
+            """, unsafe_allow_html=True)
+
+            patient_data = {
+                "timestamp": datetime.datetime.now(),
+                "age": float(age),
+                "menopausal_status": menopausal_status,
+                "tumor_stage": int(tumor_stage),
+                "lymph_nodes_examined": float(lymph_nodes_examined),
+                "er_status": er_status,
+                "pr_status": pr_status,
+                "her2_status": her2_status,
+                "chemotherapy": chemotherapy,
+                "radiotherapy": radiotherapy,
+                "hormone_therapy": hormone_therapy,
+                "surgery": surgery,
+                "survival_5yr": survival_5yr,
+                "survival_10yr": survival_10yr
+            }
+            collection.insert_one(patient_data)
+
+            st.markdown("""
+                <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem;
+                            border-radius: 15px; color: #880e4f; font-weight: bold;
+                            text-align: center;'>
+                    Patient prediction record successfully saved to MongoDB Atlas.
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        patient_data = {
-            "timestamp": datetime.datetime.now(),
-            "age": age,
-            "menopausal_status": st.session_state.get("menopausal_status"),
-            "tumor_stage": tumor_stage,
-            "lymph_nodes_examined": lymph_nodes_examined,
-            "er_status": st.session_state.get("er_status"),
-            "pr_status": st.session_state.get("pr_status"),
-            "her2_status": st.session_state.get("her2_status"),
-            "chemotherapy": st.session_state.get("chemotherapy"),
-            "radiotherapy": st.session_state.get("radiotherapy"),
-            "hormone_therapy": st.session_state.get("hormone_therapy"),
-            "surgery": st.session_state.get("surgery"),
-            "survival_5yr": survival_5yr,
-            "survival_10yr": survival_10yr
-        }
-        collection.insert_one(patient_data)
-
-        st.markdown("""
-            <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem;
-                        border-radius: 15px; color: #880e4f; font-weight: bold;
-                        text-align: center;'>
-                Patient prediction record successfully saved to MongoDB Atlas.
-            </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+        except Exception as e:
+            st.error("Something went wrong. Please check your inputs.")
 
 st.markdown("</div>", unsafe_allow_html=True)

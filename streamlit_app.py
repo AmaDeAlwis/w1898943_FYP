@@ -60,7 +60,8 @@ input, select, textarea {
 """, unsafe_allow_html=True)
 
 if "reset" in st.query_params:
-    st.query_params.clear()
+    for key in st.session_state.keys():
+        del st.session_state[key]
     st.rerun()
 
 st.markdown('<div class="container">', unsafe_allow_html=True)

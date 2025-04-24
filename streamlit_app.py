@@ -155,13 +155,6 @@ if predict:
         her2_undef
     ]).reshape(1, -1)
 
-    # Scale features safely
-    try:
-        input_scaled = scaler.transform(input_features)
-    except Exception as scale_err:
-        st.error(f"❌ Error during scaler.transform: {scale_err}")
-        st.stop()
-
 
 
     # Scale features

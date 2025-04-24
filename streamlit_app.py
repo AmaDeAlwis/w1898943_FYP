@@ -59,15 +59,14 @@ input, select, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-if "reset" in st.query_params:
-    for key in st.session_state.keys():
-        del st.session_state[key]
-    st.rerun()
-
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
+# Initialize session state if not already set
+if "reset_flag" not in st.session_state:
+    st.session_state.reset_flag = False
+    
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -97,9 +96,8 @@ with st.form("input_form", clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    st.query_params["reset"] = "true"
-    st.rerun()
-
+    st.session_state.clear()
+    st.experimental_rerun()
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

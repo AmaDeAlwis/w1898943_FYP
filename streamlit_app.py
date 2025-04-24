@@ -215,7 +215,9 @@ if predict:
     }
 
     collection.insert_one(patient_data)
-        st.markdown("""
+        collection.insert_one(patient_data)
+
+    st.markdown("""
         <div style='
             margin-top: 1.5rem;
             background-color: #fce4ec;
@@ -229,6 +231,7 @@ if predict:
         </div>
     """, unsafe_allow_html=True)
 
+    
 
 
 # Close container

@@ -45,37 +45,38 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Reset logic (before form)
+# Clear session state on reset via URL param
 if st.query_params.get("reset"):
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"]:
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
         if key in st.session_state:
             del st.session_state[key]
     st.query_params.clear()
-    st.experimental_rerun()
+    st.rerun()  # <- NEW METHOD
 
-# --- Form ---
+# Form layout
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
-        st.number_input("Age", min_value=20, max_value=96, key="age")
-        st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-        st.selectbox("Tumor Stage", [1, 2, 3, 4], key="tumor_stage")
-        st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, key="lymph_nodes_examined")
+        age = st.number_input("Age", min_value=20, max_value=96, key="age")
+        menopausal_status = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+        tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4], key="tumor_stage")
+        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, key="lymph_nodes_examined")
     with col2:
-        st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
-        st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
-        st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+        er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
+        pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
+        her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
     col3, col4 = st.columns(2)
     with col3:
-        st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
-        st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"], key="surgery")
+        chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
+        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"], key="surgery")
     with col4:
-        st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
-        st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
+        radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
+        hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
 
     colA, colB = st.columns(2)
     with colA:
@@ -83,13 +84,12 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# Handle reset button
 if reset:
     st.query_params["reset"] = "true"
-    st.experimental_rerun()
+    st.rerun()  # <- NEW METHOD
 
-# Handle prediction
 if predict:
+    # Preprocess input
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
     er_status = 1 if st.session_state.er_status == "Positive" else 0
     pr_status = 1 if st.session_state.pr_status == "Positive" else 0

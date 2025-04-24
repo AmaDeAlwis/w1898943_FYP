@@ -97,8 +97,15 @@ with st.form("input_form", clear_on_submit=False):
     with colA:
         reset = st.form_submit_button("RESET")
         if reset:
-            st.query_params["reset"] = "true"
-            st.rerun()
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.rerun()
+
     with colB:
         predict = st.form_submit_button("PREDICT")
 

@@ -7,7 +7,6 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-# Set page config
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # Load model and scaler
@@ -41,22 +40,16 @@ input, select, textarea { border-radius: 10px !important; cursor: pointer !impor
 </style>
 """, unsafe_allow_html=True)
 
-# Reset form if triggered
-if st.session_state.get("reset_form", False):
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        st.session_state.pop(key, None)
-    st.session_state["reset_form"] = False
-
-# App title and instructions
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Input form
+# --- Reset handler ---
+if "reset_flag" in st.session_state:
+    if st.session_state.reset_flag:
+        st.session_state.clear()
+        st.experimental_rerun()
+
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
@@ -83,12 +76,12 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# Handle Reset
+# If reset clicked, trigger session_state clearing next rerun
 if reset:
-    st.session_state["reset_form"] = True
+    st.session_state["reset_flag"] = True
     st.experimental_rerun()
 
-# Handle Prediction
+# If predict clicked
 if predict:
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
     er_status = 1 if st.session_state.er_status == "Positive" else 0
@@ -120,7 +113,7 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()
         survival_10yr = torch.sigmoid(event_output[0]).item()
 
-    # Prediction results
+    # Prediction box
     st.markdown(f"""
         <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
              box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
@@ -138,7 +131,7 @@ if predict:
     """, unsafe_allow_html=True)
 
     # Save to MongoDB
-    patient_data = {
+    collection.insert_one({
         "timestamp": datetime.datetime.now(),
         "age": st.session_state.age,
         "menopausal_status": st.session_state.menopausal_status,
@@ -153,8 +146,7 @@ if predict:
         "surgery": st.session_state.surgery,
         "survival_5yr": survival_5yr,
         "survival_10yr": survival_10yr
-    }
-    collection.insert_one(patient_data)
+    })
 
     st.markdown("""
         <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem;

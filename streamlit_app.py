@@ -5,9 +5,9 @@ import joblib
 from torch_geometric.data import Data
 from pymongo import MongoClient
 import datetime
-from sklearn.preprocessing import StandardScaler
 from gcn_model_class import SurvivalGNN
 
+# Set up the app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # Load model and scaler
@@ -21,20 +21,11 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Custom CSS ---
+# Custom CSS
 st.markdown("""
 <style>
-h1 {
-    text-align: center;
-    color: #FFFFFF;
-}
-.section-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-top: 2rem;
-    margin-bottom: 0.5rem;
-    color: #ad1457;
-}
+h1 { text-align: center; color: #FFFFFF; }
+.section-title { font-size: 20px; font-weight: bold; margin-top: 2rem; margin-bottom: 0.5rem; color: #ad1457; }
 button[kind="primary"] {
     background-color: #ad1457 !important;
     color: white !important;
@@ -46,10 +37,7 @@ button[kind="primary"] {
     margin-top: 1rem !important;
     cursor: pointer !important;
 }
-input, select, textarea {
-    border-radius: 10px !important;
-    cursor: pointer !important;
-}
+input, select, textarea { border-radius: 10px !important; cursor: pointer !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -57,17 +45,18 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Initialize or clear state
-if 'reset' not in st.session_state:
-    st.session_state['reset'] = False
+# --- Handle RESET ---
+if "reset_triggered" not in st.session_state:
+    st.session_state.reset_triggered = False
 
-if st.session_state['reset']:
+if st.session_state.reset_triggered:
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"]:
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
         st.session_state.pop(key, None)
-    st.session_state['reset'] = False
+    st.session_state.reset_triggered = False
 
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
@@ -80,6 +69,7 @@ with st.form("input_form", clear_on_submit=False):
         er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
         her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+
     col3, col4 = st.columns(2)
     with col3:
         chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
@@ -87,6 +77,7 @@ with st.form("input_form", clear_on_submit=False):
     with col4:
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
+
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("RESET")
@@ -94,26 +85,27 @@ with st.form("input_form", clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    st.session_state['reset'] = True
+    st.session_state.reset_triggered = True
     st.experimental_rerun()
 
 if predict:
-    menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
-    er_status = 1 if er_status == "Positive" else 0
-    pr_status = 1 if pr_status == "Positive" else 0
-    her2_neutral = 1 if her2_status == "Neutral" else 0
-    her2_loss = 1 if her2_status == "Loss" else 0
-    her2_gain = 1 if her2_status == "Gain" else 0
-    her2_undef = 1 if her2_status == "Undef" else 0
-    chemotherapy = 1 if chemotherapy == "Yes" else 0
-    radiotherapy = 1 if radiotherapy == "Yes" else 0
-    hormone_therapy = 1 if hormone_therapy == "Yes" else 0
-    surgery_conserving = 1 if surgery == "Breast-conserving" else 0
-    surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+    # Convert categorical to numeric
+    menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
+    er_status = 1 if st.session_state.er_status == "Positive" else 0
+    pr_status = 1 if st.session_state.pr_status == "Positive" else 0
+    her2_neutral = 1 if st.session_state.her2_status == "Neutral" else 0
+    her2_loss = 1 if st.session_state.her2_status == "Loss" else 0
+    her2_gain = 1 if st.session_state.her2_status == "Gain" else 0
+    her2_undef = 1 if st.session_state.her2_status == "Undef" else 0
+    chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
+    radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
+    hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
+    surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
+    surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
 
     input_features = np.array([
-        age, chemotherapy, er_status, hormone_therapy, menopausal_status,
-        lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
+        st.session_state.age, chemotherapy, er_status, hormone_therapy, menopausal_status,
+        st.session_state.lymph_nodes_examined, pr_status, radiotherapy, st.session_state.tumor_stage,
         surgery_conserving, surgery_mastectomy, her2_gain,
         her2_loss, her2_neutral, her2_undef
     ]).reshape(1, -1)
@@ -146,17 +138,17 @@ if predict:
 
     patient_data = {
         "timestamp": datetime.datetime.now(),
-        "age": age,
-        "menopausal_status": menopausal_status,
-        "tumor_stage": tumor_stage,
-        "lymph_nodes_examined": lymph_nodes_examined,
-        "er_status": er_status,
-        "pr_status": pr_status,
-        "her2_status": her2_status,
-        "chemotherapy": chemotherapy,
-        "radiotherapy": radiotherapy,
-        "hormone_therapy": hormone_therapy,
-        "surgery": surgery,
+        "age": st.session_state.age,
+        "menopausal_status": st.session_state.menopausal_status,
+        "tumor_stage": st.session_state.tumor_stage,
+        "lymph_nodes_examined": st.session_state.lymph_nodes_examined,
+        "er_status": st.session_state.er_status,
+        "pr_status": st.session_state.pr_status,
+        "her2_status": st.session_state.her2_status,
+        "chemotherapy": st.session_state.chemotherapy,
+        "radiotherapy": st.session_state.radiotherapy,
+        "hormone_therapy": st.session_state.hormone_therapy,
+        "surgery": st.session_state.surgery,
         "survival_5yr": survival_5yr,
         "survival_10yr": survival_10yr
     }

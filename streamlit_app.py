@@ -15,12 +15,12 @@ gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=tor
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-# Connect to MongoDB
+# MongoDB connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Custom CSS
+# --- Custom CSS ---
 st.markdown("""
 <style>
 h1 { text-align: center; color: #FFFFFF; }
@@ -40,16 +40,12 @@ input, select, textarea { border-radius: 10px !important; cursor: pointer !impor
 </style>
 """, unsafe_allow_html=True)
 
+# --- Header ---
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- Reset handler ---
-if "reset_flag" in st.session_state:
-    if st.session_state.reset_flag:
-        st.session_state.clear()
-        st.experimental_rerun()
-
+# --- Form ---
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
@@ -61,7 +57,7 @@ with st.form("input_form", clear_on_submit=False):
         er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
         her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
-    
+
     col3, col4 = st.columns(2)
     with col3:
         chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
@@ -76,29 +72,40 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# If reset clicked, trigger session_state clearing next rerun
+# --- Handle RESET ---
 if reset:
-    st.session_state["reset_flag"] = True
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        st.session_state.pop(key, None)
     st.experimental_rerun()
 
-# If predict clicked
+# --- Handle PREDICT ---
 if predict:
-    menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
-    er_status = 1 if st.session_state.er_status == "Positive" else 0
-    pr_status = 1 if st.session_state.pr_status == "Positive" else 0
-    her2_neutral = 1 if st.session_state.her2_status == "Neutral" else 0
-    her2_loss = 1 if st.session_state.her2_status == "Loss" else 0
-    her2_gain = 1 if st.session_state.her2_status == "Gain" else 0
-    her2_undef = 1 if st.session_state.her2_status == "Undef" else 0
-    chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
-    radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
-    hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
-    surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
-    surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
+    # Use safe .get() to avoid errors
+    age = st.session_state.get("age", 0)
+    menopausal_status = 1 if st.session_state.get("menopausal_status") == "Post-menopausal" else 0
+    tumor_stage = st.session_state.get("tumor_stage", 1)
+    lymph_nodes_examined = st.session_state.get("lymph_nodes_examined", 0)
+    er_status = 1 if st.session_state.get("er_status") == "Positive" else 0
+    pr_status = 1 if st.session_state.get("pr_status") == "Positive" else 0
+    her2_val = st.session_state.get("her2_status", "")
+    her2_neutral = 1 if her2_val == "Neutral" else 0
+    her2_loss = 1 if her2_val == "Loss" else 0
+    her2_gain = 1 if her2_val == "Gain" else 0
+    her2_undef = 1 if her2_val == "Undef" else 0
+    chemotherapy = 1 if st.session_state.get("chemotherapy") == "Yes" else 0
+    radiotherapy = 1 if st.session_state.get("radiotherapy") == "Yes" else 0
+    hormone_therapy = 1 if st.session_state.get("hormone_therapy") == "Yes" else 0
+    surgery_val = st.session_state.get("surgery", "")
+    surgery_conserving = 1 if surgery_val == "Breast-conserving" else 0
+    surgery_mastectomy = 1 if surgery_val == "Mastectomy" else 0
 
     input_features = np.array([
-        st.session_state.age, chemotherapy, er_status, hormone_therapy, menopausal_status,
-        st.session_state.lymph_nodes_examined, pr_status, radiotherapy, st.session_state.tumor_stage,
+        age, chemotherapy, er_status, hormone_therapy, menopausal_status,
+        lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
         surgery_conserving, surgery_mastectomy, her2_gain,
         her2_loss, her2_neutral, her2_undef
     ]).reshape(1, -1)
@@ -113,7 +120,6 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()
         survival_10yr = torch.sigmoid(event_output[0]).item()
 
-    # Prediction box
     st.markdown(f"""
         <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
              box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
@@ -130,23 +136,23 @@ if predict:
         </div>
     """, unsafe_allow_html=True)
 
-    # Save to MongoDB
-    collection.insert_one({
+    patient_data = {
         "timestamp": datetime.datetime.now(),
-        "age": st.session_state.age,
-        "menopausal_status": st.session_state.menopausal_status,
-        "tumor_stage": st.session_state.tumor_stage,
-        "lymph_nodes_examined": st.session_state.lymph_nodes_examined,
-        "er_status": st.session_state.er_status,
-        "pr_status": st.session_state.pr_status,
-        "her2_status": st.session_state.her2_status,
-        "chemotherapy": st.session_state.chemotherapy,
-        "radiotherapy": st.session_state.radiotherapy,
-        "hormone_therapy": st.session_state.hormone_therapy,
-        "surgery": st.session_state.surgery,
+        "age": age,
+        "menopausal_status": st.session_state.get("menopausal_status"),
+        "tumor_stage": tumor_stage,
+        "lymph_nodes_examined": lymph_nodes_examined,
+        "er_status": st.session_state.get("er_status"),
+        "pr_status": st.session_state.get("pr_status"),
+        "her2_status": st.session_state.get("her2_status"),
+        "chemotherapy": st.session_state.get("chemotherapy"),
+        "radiotherapy": st.session_state.get("radiotherapy"),
+        "hormone_therapy": st.session_state.get("hormone_therapy"),
+        "surgery": st.session_state.get("surgery"),
         "survival_5yr": survival_5yr,
         "survival_10yr": survival_10yr
-    })
+    }
+    collection.insert_one(patient_data)
 
     st.markdown("""
         <div style='margin-top: 1.5rem; background-color: #fce4ec; padding: 1rem;

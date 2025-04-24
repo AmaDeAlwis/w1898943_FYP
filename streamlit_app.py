@@ -96,7 +96,7 @@ with st.form("input_form", clear_on_submit=False):
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("RESET")
-        if reset:
+    if reset:
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",

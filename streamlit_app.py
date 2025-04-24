@@ -172,8 +172,8 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
 # Display Predictions Nicely
-        st.markdown(f"""
-            <div style='
+    st.markdown(f"""
+        <div style='
             background-color: #ffe4ec;
             padding: 1.5rem;
             border-radius: 20px;
@@ -215,10 +215,9 @@ if predict:
     }
 
     collection.insert_one(patient_data)
-        collection.insert_one(patient_data)
-
-        st.markdown("""
-            <div style='
+       
+    st.markdown("""
+         <div style='
             margin-top: 1.5rem;
             background-color: #fce4ec;
             padding: 1rem;

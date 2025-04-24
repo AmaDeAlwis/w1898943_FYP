@@ -57,18 +57,18 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- Reset Handler ---
-if st.query_params.get("reset") == "true":
+if st.query_params.get("reset"):
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"]:
-        st.session_state.pop(key, None)
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        if key in st.session_state:
+            del st.session_state[key]
     st.query_params.clear()
-    st.rerun()
+    st.experimental_rerun()
 
-with st.form("input_form"):
-    st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
+with st.form("input_form",clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
         age = st.number_input("Age", min_value=20, max_value=96, key="age")
@@ -79,8 +79,6 @@ with st.form("input_form"):
         er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
         her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
-
-    st.markdown("<div class='section-title'> Treatment Data</div>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
     with col3:
         chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
@@ -88,7 +86,6 @@ with st.form("input_form"):
     with col4:
         radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
         hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
-
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("RESET")
@@ -97,7 +94,7 @@ with st.form("input_form"):
 
     if reset:
         st.query_params["reset"] = "true"
-        st.rerun()
+        st.experimental_rerun()
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

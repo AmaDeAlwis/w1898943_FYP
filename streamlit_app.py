@@ -20,17 +20,6 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Handle RESET before form is built
-if st.query_params.get("reset") == "true":
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        st.session_state.pop(key, None)
-    st.query_params.clear()
-    st.experimental_rerun()
-
 # --- Custom CSS ---
 st.markdown("""
 <style>
@@ -50,6 +39,12 @@ button[kind="primary"] {
 input, select, textarea { border-radius: 10px !important; cursor: pointer !important; }
 </style>
 """, unsafe_allow_html=True)
+
+# If reset param is in query, reset state and rerun
+if "reset" in st.query_params:
+    st.query_params.clear()
+    st.session_state.clear()
+    st.experimental_rerun()
 
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
@@ -81,12 +76,11 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# --- Handle RESET ---
+# If RESET is pressed, trigger a rerun with reset flag
 if reset:
     st.query_params["reset"] = "true"
     st.experimental_rerun()
 
-# --- Handle PREDICT ---
 if predict:
     # Convert categorical to numeric
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
@@ -135,7 +129,6 @@ if predict:
         </div>
     """, unsafe_allow_html=True)
 
-    # Save to MongoDB
     patient_data = {
         "timestamp": datetime.datetime.now(),
         "age": st.session_state.age,

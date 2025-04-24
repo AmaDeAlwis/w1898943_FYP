@@ -45,26 +45,51 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
+# --- Default values ---
+default_values = {
+    "age": 20,
+    "menopausal_status": "Pre-menopausal",
+    "tumor_stage": 1,
+    "lymph_nodes_examined": 0,
+    "er_status": "Positive",
+    "pr_status": "Positive",
+    "her2_status": "Neutral",
+    "chemotherapy": "No",
+    "surgery": "Breast-conserving",
+    "radiotherapy": "No",
+    "hormone_therapy": "No"
+}
 
+# --- Initialize session state if missing ---
+for k, v in default_values.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# --- Reset logic ---
+def reset_fields():
+    for k, v in default_values.items():
+        st.session_state[k] = v
+
+# --- Form ---
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("Age", min_value=20, max_value=96, key="age")
-        menopausal_status = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-        tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4], key="tumor_stage")
-        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, key="lymph_nodes_examined")
+        st.session_state.age = st.number_input("Age", min_value=20, max_value=96, value=st.session_state.age, key="age")
+        st.session_state.menopausal_status = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"], index=["Pre-menopausal", "Post-menopausal"].index(st.session_state.menopausal_status), key="menopausal_status")
+        st.session_state.tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4], index=[1, 2, 3, 4].index(st.session_state.tumor_stage), key="tumor_stage")
+        st.session_state.lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, value=st.session_state.lymph_nodes_examined, key="lymph_nodes_examined")
     with col2:
-        er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
-        pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
-        her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+        st.session_state.er_status = st.selectbox("ER Status", ["Positive", "Negative"], index=["Positive", "Negative"].index(st.session_state.er_status), key="er_status")
+        st.session_state.pr_status = st.selectbox("PR Status", ["Positive", "Negative"], index=["Positive", "Negative"].index(st.session_state.pr_status), key="pr_status")
+        st.session_state.her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], index=["Neutral", "Loss", "Gain", "Undef"].index(st.session_state.her2_status), key="her2_status")
 
     col3, col4 = st.columns(2)
     with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
-        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"], key="surgery")
+        st.session_state.chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], index=["Yes", "No"].index(st.session_state.chemotherapy), key="chemotherapy")
+        st.session_state.surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"], index=["Breast-conserving", "Mastectomy"].index(st.session_state.surgery), key="surgery")
     with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
-        hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
+        st.session_state.radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], index=["Yes", "No"].index(st.session_state.radiotherapy), key="radiotherapy")
+        st.session_state.hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], index=["Yes", "No"].index(st.session_state.hormone_therapy), key="hormone_therapy")
 
     colA, colB = st.columns(2)
     with colA:
@@ -73,12 +98,11 @@ with st.form("input_form", clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    st.session_state.clear()
-    st.rerun()
+    reset_fields()
+    st.experimental_rerun()
 
-
+# --- Predict Logic ---
 if predict:
-    # Convert categorical to numeric
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
     er_status = 1 if st.session_state.er_status == "Positive" else 0
     pr_status = 1 if st.session_state.pr_status == "Positive" else 0

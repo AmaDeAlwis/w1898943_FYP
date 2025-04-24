@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
+# Set up the app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # Load model and scaler
@@ -20,7 +21,7 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Custom CSS ---
+# Custom CSS
 st.markdown("""
 <style>
 h1 { text-align: center; color: #FFFFFF; }
@@ -40,15 +41,18 @@ input, select, textarea { border-radius: 10px !important; cursor: pointer !impor
 </style>
 """, unsafe_allow_html=True)
 
-# If reset param is in query, reset state and rerun
-if "reset" in st.query_params:
-    st.query_params.clear()
-    st.session_state.clear()
-    st.experimental_rerun()
-
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
+
+# Handle reset flag and rerun
+if "reset_form" in st.session_state and st.session_state.reset_form:
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"]:
+        st.session_state.pop(key, None)
+    st.session_state.reset_form = False
 
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
@@ -76,13 +80,11 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-# If RESET is pressed, trigger a rerun with reset flag
 if reset:
-    st.query_params["reset"] = "true"
+    st.session_state.reset_form = True
     st.experimental_rerun()
 
 if predict:
-    # Convert categorical to numeric
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
     er_status = 1 if st.session_state.er_status == "Positive" else 0
     pr_status = 1 if st.session_state.pr_status == "Positive" else 0

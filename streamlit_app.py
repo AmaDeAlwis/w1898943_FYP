@@ -62,7 +62,19 @@ input, select, textarea {
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
-    
+
+# Handle reset before form is shown
+if st.query_params.get("reset", None):
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.query_params.clear()
+    st.rerun()
+
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
@@ -87,7 +99,11 @@ with st.form("input_form", clear_on_submit=False):
 
     colA, colB = st.columns(2)
     with colA:
-        reset = st.form_submit_button("RESET")
+        reset = st.form_submit_button("RESET")   
+    if reset:
+        st.query_params["reset"] = "true"
+        st.rerun()
+
     with colB:
         predict = st.form_submit_button("PREDICT")
 

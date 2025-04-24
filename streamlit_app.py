@@ -155,15 +155,6 @@ if predict:
         her2_undef
     ]).reshape(1, -1)
 
-    # Debug info
-    st.subheader("🔍 DEBUG INFO")
-    try:
-        st.write("🧪 Input shape:", input_features.shape)
-        st.write("🧪 Input preview:", input_features.tolist())
-        st.write("🧪 Scaler expects:", scaler.n_features_in_, "features")
-    except Exception as debug_err:
-        st.error(f"Debug check failed: {debug_err}")
-
     # Scale features safely
     try:
         input_scaled = scaler.transform(input_features)

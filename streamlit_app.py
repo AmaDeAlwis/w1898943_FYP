@@ -25,7 +25,7 @@ gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=tor
 gcn_model.eval()
 
 # Connect to MongoDB
-client = MongoClient("mongodb+srv://AmaAlwis:AmaAlwis123@cluster0.zwyzs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 

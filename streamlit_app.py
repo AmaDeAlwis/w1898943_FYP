@@ -155,8 +155,6 @@ if predict:
         her2_undef
     ]).reshape(1, -1)
 
-
-
     # Scale features
     input_scaled = scaler.transform(input_features)
     x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
@@ -171,9 +169,9 @@ if predict:
         time_output, event_output = gcn_model(graph_data)
         survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
-# Display Predictions Nicely
+
         st.markdown(f"""
-            <div style='
+        <div style='
             background-color: #ffe4ec;
             padding: 1.5rem;
             border-radius: 20px;
@@ -184,7 +182,7 @@ if predict:
             margin-left: auto;
             margin-right: auto;
         '>
-            <h3 style='color: #c2185b;'> Survival Predictions</h3>
+            <h3 style='color: #c2185b;'>🎯 Survival Predictions</h3>
             <p style='font-size: 20px; font-weight: bold; color: #880e4f;'>
                 🩺 5-Year Survival Probability: 
                 <span style="color:#d81b60;">{survival_5yr:.2f}</span><br><br>
@@ -192,9 +190,7 @@ if predict:
                 <span style="color:#d81b60;">{survival_10yr:.2f}</span>
             </p>
         </div>
-        """, unsafe_allow_html=True)
-
-
+    """, unsafe_allow_html=True)
 
     # Save to MongoDB
     patient_data = {
@@ -214,8 +210,8 @@ if predict:
         "survival_10yr": survival_10yr
     }
 
-    collection.insert_one(patient_data)
-        st.markdown("""
+    collection.insert_one(patient_dat
+    st.markdown("""
         <div style='
             margin-top: 1.5rem;
             background-color: #fce4ec;
@@ -224,12 +220,10 @@ if predict:
             color: #880e4f;
             font-weight: bold;
             text-align: center;
+            box-shadow: 0px 2px 10px rgba(136, 14, 79, 0.15);
+            border: 1px solid #f8bbd0;
         '>
              Patient prediction record successfully saved to MongoDB Atlas.
         </div>
     """, unsafe_allow_html=True)
-
-
-
-# Close container
-st.markdown("</div>", unsafe_allow_html=True) this is what I have done so far
+ 

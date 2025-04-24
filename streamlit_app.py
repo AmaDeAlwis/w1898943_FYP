@@ -7,7 +7,6 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-# Set up the app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # Load model and scaler
@@ -21,7 +20,18 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Custom CSS
+# Handle RESET before form is built
+if st.query_params.get("reset") == "true":
+    for key in [
+        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+        "er_status", "pr_status", "her2_status", "chemotherapy",
+        "surgery", "radiotherapy", "hormone_therapy"
+    ]:
+        st.session_state.pop(key, None)
+    st.query_params.clear()
+    st.experimental_rerun()
+
+# --- Custom CSS ---
 st.markdown("""
 <style>
 h1 { text-align: center; color: #FFFFFF; }
@@ -45,19 +55,6 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Clear session state on reset via URL param
-if st.query_params.get("reset"):
-    for key in [
-        "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
-        "er_status", "pr_status", "her2_status", "chemotherapy",
-        "surgery", "radiotherapy", "hormone_therapy"
-    ]:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.query_params.clear()
-    st.rerun()  # <- NEW METHOD
-
-# Form layout
 with st.form("input_form", clear_on_submit=False):
     col1, col2 = st.columns(2)
     with col1:
@@ -84,12 +81,14 @@ with st.form("input_form", clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
+# --- Handle RESET ---
 if reset:
     st.query_params["reset"] = "true"
-    st.rerun()  # <- NEW METHOD
+    st.experimental_rerun()
 
+# --- Handle PREDICT ---
 if predict:
-    # Preprocess input
+    # Convert categorical to numeric
     menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
     er_status = 1 if st.session_state.er_status == "Positive" else 0
     pr_status = 1 if st.session_state.pr_status == "Positive" else 0
@@ -136,6 +135,7 @@ if predict:
         </div>
     """, unsafe_allow_html=True)
 
+    # Save to MongoDB
     patient_data = {
         "timestamp": datetime.datetime.now(),
         "age": st.session_state.age,

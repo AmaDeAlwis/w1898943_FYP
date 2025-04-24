@@ -96,7 +96,9 @@ with st.form("input_form", clear_on_submit=False):
     colA, colB = st.columns(2)
     with colA:
         reset = st.form_submit_button("RESET")
-    if reset:
+    with colB:
+        predict = st.form_submit_button("PREDICT")
+if reset:
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
         "er_status", "pr_status", "her2_status", "chemotherapy",
@@ -105,9 +107,6 @@ with st.form("input_form", clear_on_submit=False):
         if key in st.session_state:
             del st.session_state[key]
     st.rerun()
-
-    with colB:
-        predict = st.form_submit_button("PREDICT")
 
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0

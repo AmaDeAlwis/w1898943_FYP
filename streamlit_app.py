@@ -63,7 +63,7 @@ st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# Handle reset before form is shown
+# --- Handle Reset BEFORE Form ---
 if st.query_params.get("reset", None):
     for key in [
         "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
@@ -71,7 +71,7 @@ if st.query_params.get("reset", None):
         "surgery", "radiotherapy", "hormone_therapy"
     ]:
         if key in st.session_state:
-            del st.session_state[key]
+            del st.session_state[key]  # This clears the value properly
     st.query_params.clear()
     st.rerun()
 

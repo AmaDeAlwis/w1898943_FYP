@@ -49,8 +49,8 @@ h1 {
 }
 
 /* Apply custom style to the Predict and Reset buttons */
-button[aria-label="🔍 Predict"],
-button[aria-label="🔄 Reset"] {
+button[aria-label=" Predict"],
+button[aria-label=" Reset"] {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold !important;
@@ -82,7 +82,7 @@ st.markdown("<p style='text-align:center;'>Fill in the details below to generate
 
 # --- FORM ---
 with st.form("input_form", clear_on_submit=False):
-    st.markdown("<div class='section-title'>🧬 Clinical Data</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
 
     with col1:
@@ -96,7 +96,7 @@ with st.form("input_form", clear_on_submit=False):
         pr_status = st.selectbox("PR Status", ["Positive", "Negative"])
         her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"])
 
-    st.markdown("<div class='section-title'>💊 Treatment Data</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'> Treatment Data</div>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
 
     with col3:
@@ -181,7 +181,7 @@ if predict:
         margin-top: 2rem;
         text-align: center;
     '>
-        <h3 style='color: #ad1457;'>🎯 Survival Predictions</h3>
+        <h3 style='color: #ad1457;'> Survival Predictions</h3>
         <p style='font-size: 20px; font-weight: bold; color: #4b0082;'>
             🩺 5-Year Survival Probability: <span style="color:#00695c;">{:.2f}</span><br><br>
             🩺 10-Year Survival Probability: <span style="color:#00695c;">{:.2f}</span>

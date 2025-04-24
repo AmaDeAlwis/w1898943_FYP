@@ -172,8 +172,8 @@ if predict:
         survival_5yr = torch.sigmoid(time_output[0]).item()  # Assuming 5-year
         survival_10yr = torch.sigmoid(event_output[0]).item()  # Assuming 10-year
 # Display Predictions Nicely
-st.markdown("""
-    <div style='
+    st.markdown("""
+        <div style='
         background-color: #fff0f5;
         padding: 1.5rem;
         border-radius: 15px;
@@ -187,7 +187,7 @@ st.markdown("""
             🩺 10-Year Survival Probability: <span style="color:#00695c;">{:.2f}</span>
         </p>
     </div>
-""".format(survival_5yr, survival_10yr), unsafe_allow_html=True)
+    """.format(survival_5yr, survival_10yr), unsafe_allow_html=True)
 
 
     # Save to MongoDB

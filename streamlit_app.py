@@ -97,7 +97,7 @@ with st.form("input_form", clear_on_submit=False):
 
 if reset:
     st.session_state.clear()
-    st.experimental_rerun()
+    st.rerun()
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

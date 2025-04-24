@@ -62,32 +62,28 @@ input, select, textarea {
 st.markdown('<div class="container">', unsafe_allow_html=True)
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
-
-# Initialize session state if not already set
-if "reset_flag" not in st.session_state:
-    st.session_state.reset_flag = False
     
 with st.form("input_form", clear_on_submit=False):
     st.markdown("<div class='section-title'> Clinical Data</div>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("Age", min_value=20, max_value=96)
-        menopausal_status = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"])
-        tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4])
-        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50)
+        age = st.number_input("Age", min_value=20, max_value=96, key="age")
+        menopausal_status = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+        tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4], key="tumor_stage")
+        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=50, key="lymph_nodes_examined")
     with col2:
-        er_status = st.selectbox("ER Status", ["Positive", "Negative"])
-        pr_status = st.selectbox("PR Status", ["Positive", "Negative"])
-        her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"])
+        er_status = st.selectbox("ER Status", ["Positive", "Negative"], key="er_status")
+        pr_status = st.selectbox("PR Status", ["Positive", "Negative"], key="pr_status")
+        her2_status = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
     st.markdown("<div class='section-title'> Treatment Data</div>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
     with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"])
-        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
+        chemotherapy = st.selectbox("Chemotherapy", ["Yes", "No"], key="chemotherapy")
+        surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"], key="surgery")
     with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"])
-        hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"])
+        radiotherapy = st.selectbox("Radiotherapy", ["Yes", "No"], key="radiotherapy")
+        hormone_therapy = st.selectbox("Hormone Therapy", ["Yes", "No"], key="hormone_therapy")
 
     colA, colB = st.columns(2)
     with colA:
@@ -96,8 +92,10 @@ with st.form("input_form", clear_on_submit=False):
         predict = st.form_submit_button("PREDICT")
 
 if reset:
-    st.session_state.clear()
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
     st.rerun()
+
 if predict:
     menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
     er_status = 1 if er_status == "Positive" else 0

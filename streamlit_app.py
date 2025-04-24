@@ -92,7 +92,7 @@ with st.form("input_form",clear_on_submit=False):
     with colB:
         predict = st.form_submit_button("PREDICT")
 
-    if reset:
+if reset:
     st.session_state.clear()
     st.rerun()
 

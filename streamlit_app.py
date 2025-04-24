@@ -217,8 +217,8 @@ if predict:
     collection.insert_one(patient_data)
         collection.insert_one(patient_data)
 
-    st.markdown("""
-        <div style='
+        st.markdown("""
+            <div style='
             margin-top: 1.5rem;
             background-color: #fce4ec;
             padding: 1rem;
@@ -229,7 +229,7 @@ if predict:
         '>
              Patient prediction record successfully saved to MongoDB Atlas.
         </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
     
 

@@ -21,61 +21,79 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Initialize fields
+# Initialize field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-if "reset_triggered" in st.session_state:
-    for k in field_keys:
-        st.session_state.pop(k, None)
-    st.session_state.pop("reset_triggered")
-
-# Custom CSS
+# --- Custom CSS ---
 st.markdown("""
 <style>
-    h1 { text-align: center; color: #FFFFFF; }
-    .section-title { font-size: 20px; font-weight: bold; margin-top: 2rem; margin-bottom: 0.5rem; color: #ad1457; }
-    .stButton button { background-color: #ad1457 !important; color: white !important; font-weight: bold; border-radius: 10px; }
+h1 {
+    text-align: center;
+    color: #FFFFFF;
+}
+.section-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+    color: #ad1457;
+}
+.stButton button {
+    background-color: #ad1457 !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 10px;
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# Form
-with st.form("input_form"):
-    col1, col2 = st.columns(2)
-    with col1:
-        age = st.text_input("Age", key="age")
-        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
-        lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
-    with col2:
-        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
-        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
-        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+# Section: Clinical Data
+st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
+col1, col2 = st.columns(2)
+with col1:
+    age = st.text_input("Age", key="age")
+    if age != "" and (not age.isdigit() or int(age) < 20):
+        st.warning(" Age must be a number and at least 20.")
+    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+    tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
+    if lymph_nodes_examined != "" and (not lymph_nodes_examined.isdigit() or int(lymph_nodes_examined) < 0):
+        st.warning(" Lymph Nodes Examined must be a non-negative number.")
 
-    col3, col4 = st.columns(2)
-    with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
-        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
-    with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
-        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+with col2:
+    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
+    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
+    her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
-    left, right = st.columns([1, 1])
-    with left:
-        reset = st.form_submit_button("RESET")
-    with right:
-        predict = st.form_submit_button("PREDICT")
+# Section: Treatment Data
+st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
+col3, col4 = st.columns(2)
+with col3:
+    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
+with col4:
+    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
+    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+
+# Buttons
+left, right = st.columns([1, 1])
+with left:
+    reset = st.button("RESET")
+with right:
+    predict = st.button("PREDICT")
 
 if reset:
-    st.session_state["reset_triggered"] = True
-    st.experimental_rerun()
+    for k in field_keys:
+        st.session_state[k] = ""
+    st.rerun()
 
-# Validation
+# Prediction logic
 required_fields = [st.session_state.get(k, "") for k in field_keys]
 if predict:
     if "" in required_fields:

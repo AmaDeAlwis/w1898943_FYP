@@ -53,54 +53,57 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# Section: Clinical Data
-st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
-col1, col2 = st.columns(2)
-with col1:
-    age = st.text_input("Age", key="age")
-    if age != "" and (not age.isdigit() or int(age) < 20):
-        st.warning(" Age must be a number and at least 20.")
-    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-    tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
-    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
-    if lymph_nodes_examined != "" and (not lymph_nodes_examined.isdigit() or int(lymph_nodes_examined) < 0):
-        st.warning(" Lymph Nodes Examined must be a non-negative number.")
+# Form
+with st.form("input_form"):
+    # Section: Clinical Data
+    st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        age = st.text_input("Age", key="age")
+        if age and (not age.isdigit() or int(age) < 20):
+            st.markdown("<span style='color:red;'>⚠️ Age must be a number and at least 20.</span>", unsafe_allow_html=True)
+        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+        lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
+        if lymph_nodes_examined and (not lymph_nodes_examined.isdigit() or int(lymph_nodes_examined) < 0):
+            st.markdown("<span style='color:red;'>⚠️ Lymph Nodes Examined must be a non-negative number.</span>", unsafe_allow_html=True)
 
-with col2:
-    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
-    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
-    her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+    with col2:
+        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
+        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
+        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
-# Section: Treatment Data
-st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
-col3, col4 = st.columns(2)
-with col3:
-    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
-    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
-with col4:
-    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
-    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+    # Section: Treatment Data
+    st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
+    col3, col4 = st.columns(2)
+    with col3:
+        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
+    with col4:
+        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
+        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
-# Buttons
-left, right = st.columns([1, 1])
-with left:
-    reset = st.button("RESET")
-with right:
-    predict = st.button("PREDICT")
+    # Buttons
+    left, right = st.columns([1, 1])
+    with left:
+        reset = st.form_submit_button("RESET")
+    with right:
+        predict = st.form_submit_button("PREDICT")
 
+# Safe RESET logic (no rerun crash)
 if reset:
     for k in field_keys:
-        st.session_state[k] = ""
-    st.rerun()
+        if k in st.session_state:
+            st.session_state[k] = ""
+    st.experimental_set_query_params(reset="true")
+    st.success("Form has been reset.")
 
 # Prediction logic
 required_fields = [st.session_state.get(k, "") for k in field_keys]
 if predict:
     if "" in required_fields:
         st.warning(" Please fill in all the required fields.")
-    elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
-        st.warning(" Age must be a number and at least 20.")
-    elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
+    else:
         st.warning(" Lymph Nodes Examined must be a non-negative number.")
     else:
         age = int(st.session_state.age)

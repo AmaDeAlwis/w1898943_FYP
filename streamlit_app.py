@@ -94,12 +94,10 @@ with col4:
 # --- Buttons ---
 left, right = st.columns(2)
 
-# ✅ FINAL RESET BLOCK — SAFE
 with left:
     if st.button("RESET"):
-        for k in field_keys:
-            st.session_state[k] = ""
-        st.experimental_rerun()
+        st.query_params.clear()
+
 
 with right:
     predict_clicked = st.button("PREDICT")

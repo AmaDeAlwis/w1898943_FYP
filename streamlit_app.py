@@ -27,7 +27,10 @@ field_keys = [
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-default_values = {k: "" for k in field_keys}
+def reset_all_fields():
+    for key in field_keys:
+        if key in st.session_state:
+            st.session_state[key] = ""
 
 # --- Custom CSS ---
 st.markdown("""
@@ -90,76 +93,88 @@ with col4:
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        for k in field_keys:
-            st.session_state[k] = default_values[k]
+        reset_all_fields()
         st.success("Form has been reset.")
+
 with right:
-    if st.button("PREDICT"):
-        required_fields = [st.session_state.get(k, "") for k in field_keys]
-        if "" in required_fields:
-            st.markdown("""
-                <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
-                            color: #856404; border: 1px solid #ffeeba;
-                            margin-top: 1rem; font-weight: 500;'>
-                         Please fill in all the required fields.
+    predict_clicked = st.button("PREDICT")
+
+if predict_clicked:
+    required_fields = [st.session_state.get(k, "") for k in field_keys]
+    if "" in required_fields:
+        st.markdown("""
+            <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
+                        color: #856404; border: 1px solid #ffeeba;
+                        margin-top: 1rem; font-weight: 500;'>
+                ⚠️ Please fill in all the required fields.
+            </div>
+        """, unsafe_allow_html=True)
+
+    elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
+        st.warning(" Age must be a number and at least 20.")
+
+    elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
+        st.warning(" Lymph Nodes must be a non-negative number.")
+
+    else:
+        age = int(st.session_state.age)
+        lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
+        menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
+        er_status = 1 if st.session_state.er_status == "Positive" else 0
+        pr_status = 1 if st.session_state.pr_status == "Positive" else 0
+        her2_val = st.session_state.her2_status
+        her2_neutral = 1 if her2_val == "Neutral" else 0
+        her2_loss = 1 if her2_val == "Loss" else 0
+        her2_gain = 1 if her2_val == "Gain" else 0
+        her2_undef = 1 if her2_val == "Undef" else 0
+        chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
+        radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
+        hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
+        surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
+        tumor_stage = int(st.session_state.tumor_stage)
+
+        input_features = np.array([
+            age, chemotherapy, er_status, hormone_therapy, menopausal_status,
+            lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
+            surgery_conserving, surgery_mastectomy, her2_gain,
+            her2_loss, her2_neutral, her2_undef
+        ]).reshape(1, -1)
+
+        input_scaled = scaler.transform(input_features)
+        x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+        edge_index = torch.tensor([[0], [0]], dtype=torch.long)
+        graph_data = Data(x=x_tensor, edge_index=edge_index)
+
+        with torch.no_grad():
+            time_output, event_output = gcn_model(graph_data)
+            survival_5yr = torch.sigmoid(time_output[0]).item()
+            survival_10yr = torch.sigmoid(event_output[0]).item()
+
+        st.markdown(f"""
+            <div style='display: flex; justify-content: center; margin-top: 2rem;'>
+                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
+                            width: 100%; max-width: 600px; text-align: center;'>
+                    <h3 style='color: #c2185b;'> Survival Predictions</h3>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
                 </div>
-            """, unsafe_allow_html=True)
-        elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
-            st.warning(" Age must be a number and at least 20.")
-        elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
-            st.warning(" Lymph Nodes must be a non-negative number.")
-        else:
-            age = int(st.session_state.age)
-            lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
-            menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
-            er_status = 1 if st.session_state.er_status == "Positive" else 0
-            pr_status = 1 if st.session_state.pr_status == "Positive" else 0
-            her2_val = st.session_state.her2_status
-            her2_neutral = 1 if her2_val == "Neutral" else 0
-            her2_loss = 1 if her2_val == "Loss" else 0
-            her2_gain = 1 if her2_val == "Gain" else 0
-            her2_undef = 1 if her2_val == "Undef" else 0
-            chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
-            radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
-            hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
-            surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
-            surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
-            tumor_stage = int(st.session_state.tumor_stage)
+            </div>
+        """, unsafe_allow_html=True)
 
-            input_features = np.array([
-                age, chemotherapy, er_status, hormone_therapy, menopausal_status,
-                lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
-                surgery_conserving, surgery_mastectomy, her2_gain,
-                her2_loss, her2_neutral, her2_undef
-            ]).reshape(1, -1)
+        st.markdown("""
+            <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
+                        color: #155724; border: 1px solid #c3e6cb;
+                        margin-top: 1.5rem; font-weight: 500;'>
+                ✅ Patient record successfully saved to MongoDB Atlas.
+            </div>
+        """, unsafe_allow_html=True)
 
-            input_scaled = scaler.transform(input_features)
-            x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
-            edge_index = torch.tensor([[0], [0]], dtype=torch.long)
-            graph_data = Data(x=x_tensor, edge_index=edge_index)
-
-            with torch.no_grad():
-                time_output, event_output = gcn_model(graph_data)
-                survival_5yr = torch.sigmoid(time_output[0]).item()
-                survival_10yr = torch.sigmoid(event_output[0]).item()
-            st.markdown(f"""
-                <div style='display: flex; justify-content: center; margin-top: 2rem;'>
-                    <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
-                                box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
-                                width: 100%; max-width: 600px; text-align: center;'>
-                        <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                        <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
-                        <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
-            patient_data = {key: st.session_state.get(key) for key in field_keys}
-            patient_data.update({
-                "timestamp": datetime.datetime.now(),
-                "survival_5yr": survival_5yr,
-                "survival_10yr": survival_10yr
-            })
-            collection.insert_one(patient_data)
-
-            st.success(" Patient record successfully saved to MongoDB Atlas.")
+        patient_data = {key: st.session_state.get(key) for key in field_keys}
+        patient_data.update({
+            "timestamp": datetime.datetime.now(),
+            "survival_5yr": survival_5yr,
+            "survival_10yr": survival_10yr
+        })
+        collection.insert_one(patient_data)

@@ -26,20 +26,7 @@ field_keys = [
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
-#  Add this immediately after
-default_values = {
-    "age": "",
-    "menopausal_status": "",
-    "tumor_stage": "",
-    "lymph_nodes_examined": "",
-    "er_status": "",
-    "pr_status": "",
-    "her2_status": "",
-    "chemotherapy": "",
-    "surgery": "",
-    "radiotherapy": "",
-    "hormone_therapy": ""
-}
+
 
 # --- Custom CSS ---
 st.markdown("""
@@ -104,8 +91,14 @@ left, right = st.columns(2)
 
 with left:
     if st.button("RESET"):
-        for k, v in default_values.items():
-            st.session_state[k] = v
+        for k in field_keys:
+            # Only reset if the widget is already initialized
+            if k in st.session_state:
+                if isinstance(st.session_state[k], str):
+                    st.session_state[k] = ""
+                elif isinstance(st.session_state[k], int):
+                    st.session_state[k] = 0
+
 
 with right:
     predict_clicked = st.button("PREDICT")
@@ -118,7 +111,7 @@ if predict_clicked:
             <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
                         color: #856404; border: 1px solid #ffeeba;
                         margin-top: 1rem; font-weight: 500;'>
-                ⚠️ Please fill in all the required fields.
+                 Please fill  all  required fields.
             </div>
         """, unsafe_allow_html=True)
 
@@ -179,7 +172,7 @@ if predict_clicked:
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                ✅ Patient record successfully saved to MongoDB Atlas.
+                 Patient record successfully saved to MongoDB Atlas.
             </div>
         """, unsafe_allow_html=True)
 

@@ -102,7 +102,12 @@ with st.container():
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        st.query_params["reset"] = "true"
+        # Clear all session state variables for form fields
+        for key in field_keys:
+            if key in st.session_state:
+                del st.session_state[key]
+        # Clear the query string safely
+        st.query_params.clear()
 
 with right:
     predict_clicked = st.button("PREDICT")

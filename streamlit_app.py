@@ -58,10 +58,10 @@ h1 {
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
+st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
 # --- Input Fields ---
-st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
+st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
@@ -105,7 +105,7 @@ with col2:
                                ["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state["her2_status"]),
                                key="her2_status")
 
-st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
+st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
     chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"],

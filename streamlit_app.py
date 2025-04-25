@@ -21,7 +21,7 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Initialize field keys
+# Field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
@@ -53,9 +53,8 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# Form
+# --- Form UI ---
 with st.form("input_form"):
-    # Section: Clinical Data
     st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
@@ -73,7 +72,6 @@ with st.form("input_form"):
         pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
         her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
-    # Section: Treatment Data
     st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
     with col3:
@@ -83,28 +81,24 @@ with st.form("input_form"):
         radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
         hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
-    # Buttons
     left, right = st.columns([1, 1])
     with left:
         reset = st.form_submit_button("RESET")
     with right:
         predict = st.form_submit_button("PREDICT")
 
-# Safe RESET logic (no rerun crash)
+# --- RESET ---
 if reset:
     for k in field_keys:
-        if k in st.session_state:
-            st.session_state[k] = ""
+        st.session_state[k] = ""
     st.experimental_set_query_params(reset="true")
     st.success("Form has been reset.")
 
-# Prediction logic
+# --- PREDICT ---
 required_fields = [st.session_state.get(k, "") for k in field_keys]
 if predict:
     if "" in required_fields:
         st.warning(" Please fill in all the required fields.")
-    else:
-        st.warning(" Lymph Nodes Examined must be a non-negative number.")
     else:
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)

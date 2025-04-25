@@ -27,10 +27,6 @@ field_keys = [
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# --- RESET trigger flag ---
-if "reset_triggered" not in st.session_state:
-    st.session_state.reset_triggered = False
-
 # --- Custom CSS ---
 st.markdown("""
 <style>
@@ -89,23 +85,17 @@ with col4:
     radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
     hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
+# --- Buttons ---
 left, right = st.columns(2)
 
-# ✅ FIXED RESET SECTION
 with left:
     if st.button("RESET"):
-        st.session_state.reset_triggered = True
+        st.query_params.clear()  # ✅ safest way to reset all inputs
 
-if st.session_state.reset_triggered:
-    st.session_state.reset_triggered = False  # turn off flag first
-    for k in field_keys:
-        if k in st.session_state:
-            st.session_state[k] = ""  # set to blank instead of deleting
-
-# --- PREDICTION ---
 with right:
     predict_clicked = st.button("PREDICT")
 
+# --- Prediction logic ---
 if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
     if "" in required_fields:

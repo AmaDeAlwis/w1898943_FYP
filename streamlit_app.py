@@ -136,14 +136,15 @@ with right:
                 time_output, event_output = gcn_model(graph_data)
                 survival_5yr = torch.sigmoid(time_output[0]).item()
                 survival_10yr = torch.sigmoid(event_output[0]).item()
-
             st.markdown(f"""
-                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
-                     box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
-                     text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
-                    <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                    <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year: <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
-                    <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year: <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
+                <div style='display: flex; justify-content: center; margin-top: 2rem;'>
+                    <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                                box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
+                                width: 100%; max-width: 600px; text-align: center;'>
+                        <h3 style='color: #c2185b;'> Survival Predictions</h3>
+                        <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
+                        <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
+                    </div>
                 </div>
             """, unsafe_allow_html=True)
 

@@ -27,10 +27,9 @@ field_keys = [
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-def reset_all_fields():
-    for key in field_keys:
-        if key in st.session_state:
-            st.session_state[key] = ""
+# --- RESET trigger flag ---
+if "reset_triggered" not in st.session_state:
+    st.session_state.reset_triggered = False
 
 # --- Custom CSS ---
 st.markdown("""
@@ -57,7 +56,7 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
-# --- Input UI (no form, so fields update instantly) ---
+# --- Input UI ---
 st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
@@ -91,13 +90,20 @@ with col4:
     hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
 left, right = st.columns(2)
+
+# ✅ FIXED RESET SECTION
 with left:
     if st.button("RESET"):
-        for k in field_keys:
-            if k in st.session_state:
-                del st.session_state[k]  # Safely delete only initialized keys
-        st.experimental_rerun()
+        st.session_state.reset_triggered = True
 
+if st.session_state.reset_triggered:
+    for k in field_keys:
+        if k in st.session_state:
+            del st.session_state[k]
+    st.session_state.reset_triggered = False
+    st.experimental_rerun()
+
+# --- PREDICTION ---
 with right:
     predict_clicked = st.button("PREDICT")
 

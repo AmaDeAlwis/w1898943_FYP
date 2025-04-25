@@ -93,8 +93,10 @@ with col4:
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        reset_all_fields()
-        st.success("Form has been reset.")
+        for k in field_keys:
+            if k in st.session_state:
+                del st.session_state[k]  # Safely delete only initialized keys
+        st.experimental_rerun()
 
 with right:
     predict_clicked = st.button("PREDICT")

@@ -98,7 +98,8 @@ left, right = st.columns(2)
 
 with left:
     if st.button("RESET"):
-        st.query_params["reset"] = "true"
+        st.session_state.clear()
+        st.experimental_rerun()
 
 with right:
     predict_clicked = st.button("PREDICT")

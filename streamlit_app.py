@@ -61,17 +61,17 @@ with col1:
     age = st.text_input("Age", key="age")
     if age.strip() != "":
         if not age.isdigit():
-            st.warning("⚠️ Age must be a number.")
+            st.warning(" Age must be a number.")
         elif int(age) < 20:
-            st.warning("⚠️ Age must be at least 20.")
+            st.warning(" Age must be at least 20.")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
     tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
     lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
     if lymph_nodes_examined.strip() != "":
         if not lymph_nodes_examined.isdigit():
-            st.warning("⚠️ Lymph Nodes must be a number.")
+            st.warning(" Lymph Nodes must be a number.")
         elif int(lymph_nodes_examined) < 0:
-            st.warning("⚠️ Lymph Nodes must be 0 or more.")
+            st.warning(" Lymph Nodes must be 0 or more.")
 
 with col2:
     er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
@@ -97,7 +97,13 @@ with right:
     if st.button("PREDICT"):
         required_fields = [st.session_state.get(k, "") for k in field_keys]
         if "" in required_fields:
-            st.warning(" Please fill in all the required fields.")
+            st.markdown("""
+                <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
+                            color: #856404; border: 1px solid #ffeeba;
+                            margin-top: 1rem; font-weight: 500;'>
+                         Please fill in all the required fields.
+                </div>
+            """, unsafe_allow_html=True)
         elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
             st.warning(" Age must be a number and at least 20.")
         elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:

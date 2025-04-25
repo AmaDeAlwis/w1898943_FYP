@@ -97,11 +97,10 @@ with left:
         st.session_state.reset_triggered = True
 
 if st.session_state.reset_triggered:
+    st.session_state.reset_triggered = False  # turn off flag first
     for k in field_keys:
         if k in st.session_state:
-            del st.session_state[k]
-    st.session_state.reset_triggered = False
-    st.experimental_rerun()
+            st.session_state[k] = ""  # set to blank instead of deleting
 
 # --- PREDICTION ---
 with right:

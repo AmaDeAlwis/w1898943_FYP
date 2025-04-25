@@ -133,7 +133,9 @@ with col4:
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        st.query_params["reset"] = "true"  # Will trigger reset in next run
+        st.session_state.clear()
+        st.rerun()
+
 
 with right:
     predict_clicked = st.button("PREDICT")

@@ -10,17 +10,21 @@ from gcn_model_class import SurvivalGNN
 # Configure app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- Session Reset Handling ---
+# Define field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-if "reset_triggered" in st.session_state:
-    for k in field_keys:
-        st.session_state.pop(k, None)
-    st.session_state.pop("reset_triggered")
+# --- Reset Flag Handling ---
+reset_flag = st.query_params.get("reset", "false").lower() == "true"
+if reset_flag:
+    for key in field_keys:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.query_params.clear()
+    st.experimental_rerun()
 
 # Load model and scaler
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
@@ -94,14 +98,13 @@ with st.form("input_form"):
 
     left, right = st.columns([1, 1])
     with left:
-        reset = st.form_submit_button("RESET")
+        st.markdown("""
+            <a href='?reset=true'>
+                <button style='background-color:#ad1457; color:white; font-weight:bold; border-radius:10px;'>RESET</button>
+            </a>
+        """, unsafe_allow_html=True)
     with right:
         predict = st.form_submit_button("PREDICT")
-
-# --- Reset Button Logic ---
-if reset:
-    st.session_state["reset_triggered"] = True
-    st.rerun()
 
 # --- Prediction Logic ---
 if predict:
@@ -111,7 +114,7 @@ if predict:
             <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
                         color: #856404; border: 1px solid #ffeeba;
                         margin-top: 1rem; font-weight: 500;'>
-                 Please fill all required fields.
+                ⚠️ Please fill all required fields.
             </div>
         """, unsafe_allow_html=True)
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
@@ -169,7 +172,7 @@ if predict:
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                  Patient record successfully saved to MongoDB Atlas.
+                 ✅ Patient record successfully saved to MongoDB Atlas.
             </div>
         """, unsafe_allow_html=True)
 

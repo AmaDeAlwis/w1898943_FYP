@@ -7,37 +7,31 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-# Configure app
+# Configure Streamlit page
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# Define field keys
+# Load model & scaler
+gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
+gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device('cpu')))
+gcn_model.eval()
+scaler = joblib.load("scaler.pkl")
+
+# MongoDB connection
+client = MongoClient(st.secrets["MONGODB_URI"])
+db = client["breast_cancer_survival"]
+collection = db["patient_records"]
+
+# Field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# --- Reset Flag Handling ---
-reset_flag = st.query_params.get("reset", "false").lower() == "true"
-if reset_flag:
-    for key in field_keys:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.query_params.clear()
-    st.experimental_rerun()
+# Check if reset triggered via query param
+reset_triggered = st.query_params.get("reset") == "true"
 
-# Load model and scaler
-gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
-gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device('cpu')))
-gcn_model.eval()
-scaler = joblib.load("scaler.pkl")
-
-# Connect to MongoDB
-client = MongoClient(st.secrets["MONGODB_URI"])
-db = client["breast_cancer_survival"]
-collection = db["patient_records"]
-
-# --- Custom CSS ---
+# --- Custom CSS (leave unchanged) ---
 st.markdown("""
 <style>
 h1 {
@@ -55,16 +49,24 @@ h1 {
     background-color: #ad1457 !important;
     color: white !important;
     font-weight: bold;
-    border-radius: 10px;
+    border-radius: 10px !important;
 }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
 
+# --- RESET logic ---
+if reset_triggered:
+    for k in field_keys:
+        if k in st.session_state:
+            del st.session_state[k]
+    # Remove query param after reset
+    st.switch_page("streamlit_app.py")
+
 # --- Input UI ---
-st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
-with st.form("input_form"):
+with st.container():
+    st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     with col1:
         age = st.text_input("Age", key="age")
@@ -73,8 +75,8 @@ with st.form("input_form"):
                 st.warning(" Age must be a number.")
             elif int(age) < 20:
                 st.warning(" Age must be at least 20.")
-        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+        st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+        st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
         lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
         if lymph_nodes_examined.strip() != "":
             if not lymph_nodes_examined.isdigit():
@@ -83,44 +85,46 @@ with st.form("input_form"):
                 st.warning(" Lymph Nodes must be 0 or more.")
 
     with col2:
-        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
-        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
-        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+        st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
+        st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
+        st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
     st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
     col3, col4 = st.columns(2)
     with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
-        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
+        st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+        st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
     with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
-        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+        st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
+        st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
-    left, right = st.columns([1, 1])
-    with left:
-        st.markdown("""
-            <a href='?reset=true'>
-                <button style='background-color:#ad1457; color:white; font-weight:bold; border-radius:10px;'>RESET</button>
-            </a>
-        """, unsafe_allow_html=True)
-    with right:
-        predict = st.form_submit_button("PREDICT")
+# --- Buttons ---
+left, right = st.columns(2)
+with left:
+    if st.button("RESET"):
+        st.query_params["reset"] = "true"
 
-# --- Prediction Logic ---
-if predict:
+with right:
+    predict_clicked = st.button("PREDICT")
+
+# --- PREDICTION logic ---
+if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
     if "" in required_fields:
         st.markdown("""
             <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
                         color: #856404; border: 1px solid #ffeeba;
                         margin-top: 1rem; font-weight: 500;'>
-                ⚠️ Please fill all required fields.
+                ⚠️ Please fill in all the required fields.
             </div>
         """, unsafe_allow_html=True)
+
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
         st.warning(" Age must be a number and at least 20.")
+
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
         st.warning(" Lymph Nodes must be a non-negative number.")
+
     else:
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
@@ -172,7 +176,7 @@ if predict:
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                 ✅ Patient record successfully saved to MongoDB Atlas.
+                ✅ Patient record successfully saved to MongoDB Atlas.
             </div>
         """, unsafe_allow_html=True)
 

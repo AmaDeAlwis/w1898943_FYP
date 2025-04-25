@@ -93,11 +93,19 @@ with left:
     if st.button("RESET"):
         for k in field_keys:
             if k in st.session_state:
-                current_val = st.session_state.get(k)
-                if isinstance(current_val, str) or current_val is None:
+                widget_val = st.session_state[k]
+                # Safely reset string fields
+                if isinstance(widget_val, str) and widget_val in ["", "Pre-menopausal", "Post-menopausal", "Positive", "Negative", "Neutral", "Loss", "Gain", "Undef", "Yes", "No", "Breast-conserving", "Mastectomy"]:
                     st.session_state[k] = ""
+                # Safely reset integers like tumor_stage
+                elif isinstance(widget_val, int) and widget_val in [1, 2, 3, 4]:
+                    st.session_state[k] = ""
+                # For any edge case: try pass silently
                 else:
-                    st.session_state[k] = 0
+                    try:
+                        st.session_state[k] = ""
+                    except:
+                        pass
 
 with right:
     predict_clicked = st.button("PREDICT")

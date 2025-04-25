@@ -26,6 +26,20 @@ field_keys = [
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
+#  Add this immediately after
+default_values = {
+    "age": "",
+    "menopausal_status": "",
+    "tumor_stage": "",
+    "lymph_nodes_examined": "",
+    "er_status": "",
+    "pr_status": "",
+    "her2_status": "",
+    "chemotherapy": "",
+    "surgery": "",
+    "radiotherapy": "",
+    "hormone_therapy": ""
+}
 
 # --- Custom CSS ---
 st.markdown("""
@@ -90,7 +104,8 @@ left, right = st.columns(2)
 
 with left:
     if st.button("RESET"):
-        st.query_params.clear()  # ✅ safest way to reset all inputs
+        for k, v in default_values.items():
+            st.session_state[k] = v
 
 with right:
     predict_clicked = st.button("PREDICT")

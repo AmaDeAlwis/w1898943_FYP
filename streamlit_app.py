@@ -7,6 +7,7 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
+# Configure app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 # Load model and scaler
@@ -15,85 +16,91 @@ gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=tor
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-# MongoDB connection
+# Connect to MongoDB
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# CSS Styling
+# Initialize fields
+field_keys = [
+    "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
+    "er_status", "pr_status", "her2_status", "chemotherapy",
+    "surgery", "radiotherapy", "hormone_therapy"
+]
+
+if "reset_triggered" in st.session_state:
+    for k in field_keys:
+        st.session_state.pop(k, None)
+    st.session_state.pop("reset_triggered")
+
+# Custom CSS
 st.markdown("""
 <style>
-h1 { text-align: center; color: #FFFFFF; }
-.section-title { font-size: 20px; font-weight: bold; color: #ad1457; margin-top: 2rem; }
-button[kind="primary"] {
-    background-color: #ad1457 !important;
-    color: white !important;
-    border-radius: 10px !important;
-    padding: 0.6rem 1.5rem !important;
-    font-weight: bold !important;
-}
-input, select { border-radius: 10px !important; }
+    h1 { text-align: center; color: #FFFFFF; }
+    .section-title { font-size: 20px; font-weight: bold; margin-top: 2rem; margin-bottom: 0.5rem; color: #ad1457; }
+    .stButton button { background-color: #ad1457 !important; color: white !important; font-weight: bold; border-radius: 10px; }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Fill in the details below to generate predictions and insights.</p>", unsafe_allow_html=True)
 
-# --- Form ---
+# Form
 with st.form("input_form"):
     col1, col2 = st.columns(2)
     with col1:
-        age = st.number_input("Age", min_value=0, max_value=120, value=None, placeholder="Enter age")
-        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"])
-        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4])
-        lymph_nodes_examined = st.number_input("Lymph Nodes Examined", min_value=0, max_value=100, value=None, placeholder="Enter value")
+        age = st.text_input("Age", key="age")
+        menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+        tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+        lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
     with col2:
-        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"])
-        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"])
-        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"])
+        er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
+        pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
+        her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
     col3, col4 = st.columns(2)
     with col3:
-        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"])
-        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
+        chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+        surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
     with col4:
-        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"])
-        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
+        radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
+        hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
-    submit = st.form_submit_button("PREDICT")
-    reset = st.form_submit_button("RESET")
+    left, right = st.columns([1, 1])
+    with left:
+        reset = st.form_submit_button("RESET")
+    with right:
+        predict = st.form_submit_button("PREDICT")
 
-# --- Reset Logic ---
 if reset:
-    st.session_state.clear()
+    st.session_state["reset_triggered"] = True
     st.experimental_rerun()
 
-# --- Predict Logic ---
-if submit:
-    required_fields = [
-        age, menopausal_status, tumor_stage, lymph_nodes_examined,
-        er_status, pr_status, her2_status,
-        chemotherapy, surgery, radiotherapy, hormone_therapy
-    ]
-
-    if None in [age, lymph_nodes_examined] or "" in required_fields:
-        st.warning("⚠️ Please fill in all fields before submitting.")
-    elif age < 20:
-        st.warning("⚠️ Age must be at least 20.")
+# Validation
+required_fields = [st.session_state.get(k, "") for k in field_keys]
+if predict:
+    if "" in required_fields:
+        st.warning(" Please fill in all the required fields.")
+    elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
+        st.warning(" Age must be a number and at least 20.")
+    elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
+        st.warning(" Lymph Nodes Examined must be a non-negative number.")
     else:
-        # Convert values
-        menopausal_status = 1 if menopausal_status == "Post-menopausal" else 0
-        er_status = 1 if er_status == "Positive" else 0
-        pr_status = 1 if pr_status == "Positive" else 0
-        her2_neutral = 1 if her2_status == "Neutral" else 0
-        her2_loss = 1 if her2_status == "Loss" else 0
-        her2_gain = 1 if her2_status == "Gain" else 0
-        her2_undef = 1 if her2_status == "Undef" else 0
-        chemotherapy = 1 if chemotherapy == "Yes" else 0
-        radiotherapy = 1 if radiotherapy == "Yes" else 0
-        hormone_therapy = 1 if hormone_therapy == "Yes" else 0
-        surgery_conserving = 1 if surgery == "Breast-conserving" else 0
-        surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+        age = int(st.session_state.age)
+        lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
+        menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
+        er_status = 1 if st.session_state.er_status == "Positive" else 0
+        pr_status = 1 if st.session_state.pr_status == "Positive" else 0
+        her2_val = st.session_state.her2_status
+        her2_neutral = 1 if her2_val == "Neutral" else 0
+        her2_loss = 1 if her2_val == "Loss" else 0
+        her2_gain = 1 if her2_val == "Gain" else 0
+        her2_undef = 1 if her2_val == "Undef" else 0
+        chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
+        radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
+        hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
+        surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
+        tumor_stage = int(st.session_state.tumor_stage)
 
         input_features = np.array([
             age, chemotherapy, er_status, hormone_therapy, menopausal_status,
@@ -112,35 +119,22 @@ if submit:
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        # Display result
         st.markdown(f"""
-        <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
-             box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
-             text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
-            <h3 style='color: #c2185b;'>🌸 Survival Predictions</h3>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year Survival Probability:
-                <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
-            <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year Survival Probability:
-                <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
-        </div>
+            <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                 box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15); margin-top: 2rem;
+                 text-align: center; width: 90%; margin-left: auto; margin-right: auto;'>
+                <h3 style='color: #c2185b;'> Survival Predictions</h3>
+                <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 5-Year: <span style="color:#d81b60;">{survival_5yr:.2f}</span></p>
+                <p style='font-size: 22px; font-weight: bold; color: #880e4f;'>🩺 10-Year: <span style="color:#d81b60;">{survival_10yr:.2f}</span></p>
+            </div>
         """, unsafe_allow_html=True)
 
-        # Store in MongoDB
-        collection.insert_one({
+        patient_data = {key: st.session_state.get(key) for key in field_keys}
+        patient_data.update({
             "timestamp": datetime.datetime.now(),
-            "age": age,
-            "menopausal_status": menopausal_status,
-            "tumor_stage": tumor_stage,
-            "lymph_nodes_examined": lymph_nodes_examined,
-            "er_status": er_status,
-            "pr_status": pr_status,
-            "her2_status": her2_status,
-            "chemotherapy": chemotherapy,
-            "radiotherapy": radiotherapy,
-            "hormone_therapy": hormone_therapy,
-            "surgery": surgery,
             "survival_5yr": survival_5yr,
             "survival_10yr": survival_10yr
         })
+        collection.insert_one(patient_data)
 
-        st.success("✅ Patient prediction saved to MongoDB!")
+        st.success(" Patient record successfully saved to MongoDB Atlas.")

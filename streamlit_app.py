@@ -92,13 +92,12 @@ left, right = st.columns(2)
 with left:
     if st.button("RESET"):
         for k in field_keys:
-            # Only reset if the widget is already initialized
             if k in st.session_state:
-                if isinstance(st.session_state[k], str):
+                current_val = st.session_state.get(k)
+                if isinstance(current_val, str) or current_val is None:
                     st.session_state[k] = ""
-                elif isinstance(st.session_state[k], int):
+                else:
                     st.session_state[k] = 0
-
 
 with right:
     predict_clicked = st.button("PREDICT")

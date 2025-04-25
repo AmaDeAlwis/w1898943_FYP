@@ -10,17 +10,19 @@ from gcn_model_class import SurvivalGNN
 # Configure app
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# Define all input field keys
+# Define field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# Initialize session state fields to ""
-for key in field_keys:
-    if key not in st.session_state:
-        st.session_state[key] = ""
+# ✅ Detect reset flag in query_params
+if "reset" in st.query_params:
+    for key in field_keys:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.query_params.clear()
 
 # Load model and scaler
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
@@ -62,15 +64,15 @@ st.markdown("<h1> Breast Cancer Survival Prediction Interface</h1>", unsafe_allo
 st.markdown("<p class='section-title'>Clinical Data</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
-    age = st.text_input("Age", value=st.session_state.age, key="age")
+    age = st.text_input("Age", key="age")
     if age.strip() != "":
         if not age.isdigit():
             st.warning(" Age must be a number.")
         elif int(age) < 20:
             st.warning(" Age must be at least 20.")
-    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], index=0 if st.session_state.menopausal_status == "" else ["", "Pre-menopausal", "Post-menopausal"].index(st.session_state.menopausal_status), key="menopausal_status")
-    tumor_stage = st.selectbox("Tumor Stage", ["", "1", "2", "3", "4"], index=0 if st.session_state.tumor_stage == "" else ["", "1", "2", "3", "4"].index(st.session_state.tumor_stage), key="tumor_stage")
-    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", value=st.session_state.lymph_nodes_examined, key="lymph_nodes_examined")
+    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
+    tumor_stage = st.selectbox("Tumor Stage", ["", "1", "2", "3", "4"], key="tumor_stage")
+    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
     if lymph_nodes_examined.strip() != "":
         if not lymph_nodes_examined.isdigit():
             st.warning(" Lymph Nodes must be a number.")
@@ -78,26 +80,25 @@ with col1:
             st.warning(" Lymph Nodes must be 0 or more.")
 
 with col2:
-    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], index=0 if st.session_state.er_status == "" else ["", "Positive", "Negative"].index(st.session_state.er_status), key="er_status")
-    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], index=0 if st.session_state.pr_status == "" else ["", "Positive", "Negative"].index(st.session_state.pr_status), key="pr_status")
-    her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], index=0 if st.session_state.her2_status == "" else ["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state.her2_status), key="her2_status")
+    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
+    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
+    her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
 
 st.markdown("<p class='section-title'>Treatment Data</p>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
-    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], index=0 if st.session_state.chemotherapy == "" else ["", "Yes", "No"].index(st.session_state.chemotherapy), key="chemotherapy")
-    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], index=0 if st.session_state.surgery == "" else ["", "Breast-conserving", "Mastectomy"].index(st.session_state.surgery), key="surgery")
+    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
 with col4:
-    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], index=0 if st.session_state.radiotherapy == "" else ["", "Yes", "No"].index(st.session_state.radiotherapy), key="radiotherapy")
-    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], index=0 if st.session_state.hormone_therapy == "" else ["", "Yes", "No"].index(st.session_state.hormone_therapy), key="hormone_therapy")
+    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
+    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
 
 # --- Buttons ---
 left, right = st.columns(2)
 
 with left:
     if st.button("RESET"):
-        st.query_params.clear()
-
+        st.query_params["reset"] = "true"
 
 with right:
     predict_clicked = st.button("PREDICT")

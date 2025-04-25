@@ -59,16 +59,19 @@ with st.form("input_form"):
     col1, col2 = st.columns(2)
     with col1:
         age = st.text_input("Age", key="age")
-        if age != "":
+        if age.strip() != "":
             if not age.isdigit():
                 st.warning("⚠️ Age must be a number.")
-        elif int(age) < 20:
+            elif int(age) < 20:
                 st.warning("⚠️ Age must be at least 20.")
         menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
         tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
         lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
-        if lymph_nodes_examined and (not lymph_nodes_examined.isdigit() or int(lymph_nodes_examined) < 0):
-            st.markdown("<span style='color:red;'>⚠️ Lymph Nodes Examined must be a non-negative number.</span>", unsafe_allow_html=True)
+        if lymph_nodes_examined.strip() != "":
+            if not lymph_nodes_examined.isdigit():
+                st.warning("⚠️ Lymph Nodes must be a number.")
+            elif int(lymph_nodes_examined) < 0:
+                st.warning("⚠️ Lymph Nodes must be 0 or more.")
 
     with col2:
         er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
@@ -91,9 +94,11 @@ with st.form("input_form"):
         predict = st.form_submit_button("PREDICT")
 
 # --- RESET ---
+default_values = {k: "" for k in field_keys}
 if reset:
     for k in field_keys:
-        st.session_state[k] = ""
+        if k in st.session_state:
+            st.session_state[k] = default_values[k]
     st.experimental_set_query_params(reset="true")
     st.success("Form has been reset.")
 

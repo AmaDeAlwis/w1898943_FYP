@@ -59,8 +59,11 @@ with st.form("input_form"):
     col1, col2 = st.columns(2)
     with col1:
         age = st.text_input("Age", key="age")
-        if age and (not age.isdigit() or int(age) < 20):
-            st.markdown("<span style='color:red;'>⚠️ Age must be a number and at least 20.</span>", unsafe_allow_html=True)
+        if age != "":
+            if not age.isdigit():
+                st.warning("⚠️ Age must be a number.")
+        elif int(age) < 20:
+                st.warning("⚠️ Age must be at least 20.")
         menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
         tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
         lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")

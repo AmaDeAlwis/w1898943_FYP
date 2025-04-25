@@ -64,7 +64,7 @@ with col1:
         elif int(age) < 20:
             st.warning(" Age must be at least 20.")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-    tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+    tumor_stage = st.selectbox("Tumor Stage", ["", "1", "2", "3", "4"], key="tumor_stage")
     lymph_nodes_examined = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
     if lymph_nodes_examined.strip() != "":
         if not lymph_nodes_examined.isdigit():
@@ -93,19 +93,7 @@ with left:
     if st.button("RESET"):
         for k in field_keys:
             if k in st.session_state:
-                widget_val = st.session_state[k]
-                # Safely reset string fields
-                if isinstance(widget_val, str) and widget_val in ["", "Pre-menopausal", "Post-menopausal", "Positive", "Negative", "Neutral", "Loss", "Gain", "Undef", "Yes", "No", "Breast-conserving", "Mastectomy"]:
-                    st.session_state[k] = ""
-                # Safely reset integers like tumor_stage
-                elif isinstance(widget_val, int) and widget_val in [1, 2, 3, 4]:
-                    st.session_state[k] = ""
-                # For any edge case: try pass silently
-                else:
-                    try:
-                        st.session_state[k] = ""
-                    except:
-                        pass
+                st.session_state[k] = ""
 
 with right:
     predict_clicked = st.button("PREDICT")

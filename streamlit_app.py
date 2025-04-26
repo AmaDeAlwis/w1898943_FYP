@@ -60,7 +60,7 @@ st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=Tr
 
 # --- Patient ID Section ---
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
-patient_id = st.text_input("Patient ID (Required to Save Record)", value=st.session_state["patient_id"], key="patient_id")
+patient_id = st.text_input("Patient ID (Required)", value=st.session_state["patient_id"], key="patient_id")
 
 # Show previous predictions
 if patient_id:
@@ -161,13 +161,13 @@ if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
 
     if not patient_id:
-        st.warning("Please enter a Patient ID to save the record.")
+        st.warning("Please enter a Patient ID to save the record")
     elif "" in required_fields:
-        st.warning("Please fill in all required fields.")
+        st.warning("Please fill all required fields")
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
-        st.warning("Age must be a number and at least 20.")
+        st.warning("Age must be a number and at least 20")
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
-        st.warning("Lymph Nodes must be a non-negative number.")
+        st.warning("Lymph Nodes must be a non-negative number")
     else:
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
@@ -238,6 +238,6 @@ if predict_clicked:
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                ✅ Patient record successfully saved to MongoDB Atlas!
+                 Patient record successfully saved
             </div>
         """, unsafe_allow_html=True)

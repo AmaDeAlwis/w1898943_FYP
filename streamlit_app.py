@@ -260,4 +260,7 @@ if predict_clicked:
         ax.spines['right'].set_visible(False)
         for bar, value in zip(bars, [survival_5yr, survival_10yr]):
             ax.text(bar.get_x() + bar.get_width() / 2, value + 0.02, f"{value:.2f}", ha='center', va='bottom', fontsize=9, fontweight='bold')
-        st.pyplot(fig)
+        chart_col, _ = st.columns([1, 2])  # 1/3rd size of screen only
+
+        with chart_col:
+            st.pyplot(fig)

@@ -64,7 +64,7 @@ patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_
 
 # Show previous predictions
 if patient_id:
-    previous_records = list(collection.find({"patient_id": patient_id})
+    previous_records = list(collection.find({"patient_id": patient_id}))
     if previous_records:
         with st.expander(" View Previous Predictions for this Patient ID"):
             for record in previous_records:

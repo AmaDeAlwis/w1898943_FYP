@@ -7,35 +7,35 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-# --- Configuration ---
+#Configuration 
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- Load model & scaler ---
+#Load model
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB Connection ---
+#MongoDB Connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Field Keys ---
+#Field Keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# --- Check for query param to reset ---
+#Check for query param to reset
 if "reset" in st.query_params:
     for k in field_keys:
         if k in st.session_state:
             del st.session_state[k]
     st.query_params.clear()
 
-# --- CSS Styling ---
+#CSS Styling
 st.markdown("""
 <style>
 h1 {
@@ -60,16 +60,16 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
-# --- Input Fields ---
+#Input Fields
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
     if age.strip():
         if not age.isdigit():
-            st.warning(" Age must be a number.")
+            st.warning(" Age must be a number")
         elif int(age) < 20:
-            st.warning(" Age must be at least 20.")
+            st.warning(" Age must be at least 20")
 
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"],
                                      index=0 if "menopausal_status" not in st.session_state else
@@ -129,7 +129,7 @@ with col4:
                                    ["", "Yes", "No"].index(st.session_state["hormone_therapy"]),
                                    key="hormone_therapy")
 
-# --- Buttons ---
+#Buttons 
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
@@ -140,7 +140,7 @@ with left:
 with right:
     predict_clicked = st.button("PREDICT")
 
-# --- Prediction logic ---
+#Prediction logic
 if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
     if "" in required_fields:
@@ -148,13 +148,13 @@ if predict_clicked:
             <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
                         color: #856404; border: 1px solid #ffeeba;
                         margin-top: 1rem; font-weight: 500;'>
-                ⚠️ Please fill in all required fields.
+                 Please fill in all required fields.
             </div>
         """, unsafe_allow_html=True)
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
         st.warning(" Age must be a number and at least 20.")
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
-        st.warning(" Lymph Nodes must be a non-negative number.")
+        st.warning(" Lymph Nodes must be a non-negative number")
     else:
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
@@ -196,8 +196,8 @@ if predict_clicked:
                             box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
                             width: 100%; max-width: 600px; text-align: center;'>
                     <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>🩺 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'> 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'> 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
                 </div>
             </div>
         """, unsafe_allow_html=True)
@@ -206,7 +206,7 @@ if predict_clicked:
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                ✅ Patient record successfully saved to MongoDB Atlas.
+                 Patient record successfully saved to MongoDB Atlas
             </div>
         """, unsafe_allow_html=True)
 

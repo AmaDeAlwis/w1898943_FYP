@@ -7,35 +7,28 @@ from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-#Configuration 
+# Configuration 
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-#Load model
+# Load model
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-#MongoDB Connection
+# MongoDB Connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-#Field Keys
+# Field Keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-#Check for query param to reset
-if "reset" in st.query_params:
-    for k in field_keys:
-        if k in st.session_state:
-            del st.session_state[k]
-    st.query_params.clear()
-
-#CSS Styling
+# CSS Styling
 st.markdown("""
 <style>
 h1 {
@@ -61,11 +54,22 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
-#Patient ID 
+# --- Patient ID Section ---
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
 patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id")
 
-#Input Fields
+# Show previous predictions
+if patient_id:
+    previous_records = list(collection.find({"patient_id": patient_id}))
+    if previous_records:
+        with st.expander("📂 View Previous Predictions for this Patient ID"):
+            for record in previous_records:
+                st.write(f"🕒 Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write(f"🔹 5-Year Survival: {record['survival_5yr']:.2f}")
+                st.write(f"🔹 10-Year Survival: {record['survival_10yr']:.2f}")
+                st.markdown("---")
+
+# --- Clinical Information Section ---
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
@@ -110,6 +114,7 @@ with col2:
                                ["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state["her2_status"]),
                                key="her2_status")
 
+# --- Treatment Section ---
 st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
@@ -134,47 +139,32 @@ with col4:
                                    ["", "Yes", "No"].index(st.session_state["hormone_therapy"]),
                                    key="hormone_therapy")
 
-#Buttons 
+# --- Buttons ---
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        st.session_state.clear()
+        for k in field_keys + ["patient_id"]:
+            if k in st.session_state:
+                del st.session_state[k]
         st.rerun()
-
 
 with right:
     predict_clicked = st.button("PREDICT")
 
-#Prediction logic
+# --- Prediction Logic ---
 if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
-    
+
     if not patient_id:
-        st.markdown("""
-            <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
-                        color: #856404; border: 1px solid #ffeeba;
-                        margin-top: 1rem; font-weight: 500;'>
-                 Please enter a Patient ID to save the record.
-            </div>
-        """, unsafe_allow_html=True)
-    
+        st.warning("Please enter a Patient ID to save the record.")
     elif "" in required_fields:
-        st.markdown("""
-            <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
-                        color: #856404; border: 1px solid #ffeeba;
-                        margin-top: 1rem; font-weight: 500;'>
-                 Please fill in all required fields.
-            </div>
-        """, unsafe_allow_html=True)
-    
+        st.warning("Please fill in all required fields.")
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
-        st.warning(" Age must be a number and at least 20.")
-    
+        st.warning("Age must be a number and at least 20.")
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
-        st.warning(" Lymph Nodes must be a non-negative number")
-    
+        st.warning("Lymph Nodes must be a non-negative number.")
     else:
-        # --- Preprocess inputs ---
+        # Preprocessing
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
         menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
@@ -204,26 +194,26 @@ if predict_clicked:
         edge_index = torch.tensor([[0], [0]], dtype=torch.long)
         graph_data = Data(x=x_tensor, edge_index=edge_index)
 
-        # --- Predict survival ---
+        # Predict
         with torch.no_grad():
             time_output, event_output = gcn_model(graph_data)
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        # --- Display predictions nicely ---
+        # Display predictions
         st.markdown(f"""
             <div style='display: flex; justify-content: center; margin-top: 2rem;'>
                 <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
                             box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
                             width: 100%; max-width: 600px; text-align: center;'>
                     <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'> 5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'> 10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>5-Year Survival Probability: <span style="color:#004d40;">{survival_5yr:.2f}</span></p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>10-Year Survival Probability: <span style="color:#004d40;">{survival_10yr:.2f}</span></p>
                 </div>
             </div>
         """, unsafe_allow_html=True)
 
-        # --- Save into MongoDB ---
+        # Save
         patient_data = {
             "patient_id": patient_id,
             "age": age,
@@ -241,22 +231,13 @@ if predict_clicked:
             "survival_5yr": survival_5yr,
             "survival_10yr": survival_10yr
         }
-
         collection.insert_one(patient_data)
 
+        # Success Message
         st.markdown("""
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                  Patient record successfully saved to MongoDB Atlas!
+                ✅ Patient record successfully saved to MongoDB Atlas!
             </div>
         """, unsafe_allow_html=True)
-
-
-        patient_data = {key: st.session_state.get(key) for key in field_keys}
-        patient_data.update({
-            "timestamp": datetime.datetime.now(),
-            "survival_5yr": survival_5yr,
-            "survival_10yr": survival_10yr
-        })
-        collection.insert_one(patient_data)

@@ -63,6 +63,7 @@ st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=Tr
 
 #Input Fields
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
+patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id")
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
@@ -144,7 +145,17 @@ with right:
 #Prediction logic
 if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
-    if "" in required_fields:
+    
+    if not patient_id:
+        st.markdown("""
+            <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
+                        color: #856404; border: 1px solid #ffeeba;
+                        margin-top: 1rem; font-weight: 500;'>
+                 Please enter a Patient ID to save the record.
+            </div>
+        """, unsafe_allow_html=True)
+    
+    elif "" in required_fields:
         st.markdown("""
             <div style='background-color: #fff3cd; padding: 1rem; border-radius: 10px;
                         color: #856404; border: 1px solid #ffeeba;
@@ -152,11 +163,15 @@ if predict_clicked:
                  Please fill in all required fields.
             </div>
         """, unsafe_allow_html=True)
+    
     elif not st.session_state.age.isdigit() or int(st.session_state.age) < 20:
         st.warning(" Age must be a number and at least 20.")
+    
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
         st.warning(" Lymph Nodes must be a non-negative number")
+    
     else:
+        # --- Preprocess inputs ---
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
         menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
@@ -186,11 +201,13 @@ if predict_clicked:
         edge_index = torch.tensor([[0], [0]], dtype=torch.long)
         graph_data = Data(x=x_tensor, edge_index=edge_index)
 
+        # --- Predict survival ---
         with torch.no_grad():
             time_output, event_output = gcn_model(graph_data)
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
+        # --- Display predictions nicely ---
         st.markdown(f"""
             <div style='display: flex; justify-content: center; margin-top: 2rem;'>
                 <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
@@ -203,13 +220,35 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
 
+        # --- Save into MongoDB ---
+        patient_data = {
+            "patient_id": patient_id,
+            "age": age,
+            "menopausal_status": st.session_state.menopausal_status,
+            "tumor_stage": tumor_stage,
+            "lymph_nodes_examined": lymph_nodes_examined,
+            "er_status": st.session_state.er_status,
+            "pr_status": st.session_state.pr_status,
+            "her2_status": st.session_state.her2_status,
+            "chemotherapy": st.session_state.chemotherapy,
+            "surgery": st.session_state.surgery,
+            "radiotherapy": st.session_state.radiotherapy,
+            "hormone_therapy": st.session_state.hormone_therapy,
+            "timestamp": datetime.datetime.now(),
+            "survival_5yr": survival_5yr,
+            "survival_10yr": survival_10yr
+        }
+
+        collection.insert_one(patient_data)
+
         st.markdown("""
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;
                         margin-top: 1.5rem; font-weight: 500;'>
-                 Patient record successfully saved to MongoDB Atlas
+                  Patient record successfully saved to MongoDB Atlas!
             </div>
         """, unsafe_allow_html=True)
+
 
         patient_data = {key: st.session_state.get(key) for key in field_keys}
         patient_data.update({

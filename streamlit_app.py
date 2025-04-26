@@ -145,11 +145,11 @@ with col4:
 
 # --- Buttons ---
 left, right = st.columns(2)
-
 with left:
     if st.button("RESET"):
         for k in field_keys + ["patient_id"]:
-            st.session_state[k] = ""
+            if k in st.session_state:
+                st.session_state[k] = ""
         st.rerun()
 
 with right:

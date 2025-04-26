@@ -1,11 +1,13 @@
 import streamlit as st
 import torch
+import matplotlib.pyplot as plt
 import numpy as np
 import joblib
 from torch_geometric.data import Data
 from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
+
 
 # Configuration 
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
@@ -214,6 +216,7 @@ if predict_clicked:
                 </div>
             </div>
         """, unsafe_allow_html=True)
+        fig, ax = plt.subplots()
 
         patient_data = {
             "patient_id": patient_id,
@@ -241,3 +244,12 @@ if predict_clicked:
                  Patient record successfully saved
             </div>
         """, unsafe_allow_html=True)
+        fig, ax = plt.subplots()
+ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr])
+ax.set_ylim(0, 1)
+ax.set_ylabel("Survival Probability")
+ax.set_title("Survival Probability at 5 and 10 Years")
+for i, v in enumerate([survival_5yr, survival_10yr]):
+    ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
+
+st.pyplot(fig)

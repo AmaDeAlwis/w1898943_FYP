@@ -62,9 +62,9 @@ patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_
 if patient_id:
     previous_records = list(collection.find({"patient_id": patient_id}))
     if previous_records:
-        with st.expander("📂 View Previous Predictions for this Patient ID"):
+        with st.expander(" View Previous Predictions for this Patient ID"):
             for record in previous_records:
-                st.write(f"🕒 Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write(f" Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
                 st.write(f"🔹 5-Year Survival: {record['survival_5yr']:.2f}")
                 st.write(f"🔹 10-Year Survival: {record['survival_10yr']:.2f}")
                 st.markdown("---")
@@ -141,12 +141,16 @@ with col4:
 
 # --- Buttons ---
 left, right = st.columns(2)
+
 with left:
     if st.button("RESET"):
-        for k in field_keys + ["patient_id"]:
+        # Clear Patient ID + Clinical Inputs safely
+        keys_to_clear = field_keys + ["patient_id"]
+        for k in keys_to_clear:
             if k in st.session_state:
                 del st.session_state[k]
         st.rerun()
+
 
 with right:
     predict_clicked = st.button("PREDICT")

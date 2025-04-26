@@ -147,9 +147,10 @@ with col4:
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
-        for k in field_keys + ["patient_id"]:
-            if k in st.session_state:
-                st.session_state[k] = ""
+        # Only clear keys that are not widget-controlled or were already initialized
+        for k in list(st.session_state.keys()):
+            if k in field_keys + ["patient_id"]:
+                del st.session_state[k]
         st.rerun()
 
 with right:

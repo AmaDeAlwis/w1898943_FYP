@@ -217,6 +217,19 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
         fig, ax = plt.subplots()
+        # --- Small blank margin
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # --- Bar Chart of Survival Probabilities
+        fig, ax = plt.subplots()
+        ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color=["#ff69b4", "#ff69b4"])
+        ax.set_ylim(0, 1)
+        ax.set_ylabel("Survival Probability")
+        ax.set_title("Survival Probability at 5 and 10 Years")
+        for i, v in enumerate([survival_5yr, survival_10yr]):
+            ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
+        
+        st.pyplot(fig)
 
         patient_data = {
             "patient_id": patient_id,
@@ -245,11 +258,4 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
         fig, ax = plt.subplots()
-ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr])
-ax.set_ylim(0, 1)
-ax.set_ylabel("Survival Probability")
-ax.set_title("Survival Probability at 5 and 10 Years")
-for i, v in enumerate([survival_5yr, survival_10yr]):
-    ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontweight='bold')
 
-st.pyplot(fig)

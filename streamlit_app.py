@@ -61,9 +61,12 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
+#Patient ID 
+st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
+patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id")
+
 #Input Fields
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
-patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id")
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")

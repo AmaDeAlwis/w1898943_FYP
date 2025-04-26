@@ -39,10 +39,10 @@ if "reset" in st.query_params:
 st.markdown("""
 <style>
 h1 {
-        color: #ad1457;
-        text-align: center;
-        font-weight: bold;
-    }
+    color: #ad1457 !important;
+    text-align: center;
+    font-weight: bold;
+}
 .section-title {
     font-size: 20px;
     font-weight: bold;

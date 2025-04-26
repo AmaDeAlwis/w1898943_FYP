@@ -219,20 +219,19 @@ if predict_clicked:
         fig, ax = plt.subplots()
         # --- Small blank margin
         st.markdown("<br>", unsafe_allow_html=True)
-
-                # --- Bar Chart of Survival Probabilities
-        fig, ax = plt.subplots(figsize=(5, 4))  # Control the figure size
-        ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color=["#ff69b4", "#ff69b4"], width=0.5)
+        fig, ax = plt.subplots(figsize=(3, 3))  
+        bars = ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#ff69b4", width=0.4)
+        
         ax.set_ylim(0, 1)
-        ax.set_ylabel("Survival Probability", fontsize=12)
-        ax.set_title("Survival Probability at 5 and 10 Years", fontsize=14, fontweight="bold")
+        ax.set_ylabel("Survival Probability", fontsize=10)
+        ax.set_title("Survival at 5 and 10 Years", fontsize=12, fontweight="bold", pad=15)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         
-        # Annotate values clearly
-        for i, v in enumerate([survival_5yr, survival_10yr]):
-            ax.text(i, v + 0.03, f"{v:.2f}", ha='center', va='bottom', fontsize=11, fontweight='bold')
-        
+        # Annotate values above bars
+        for bar in bars:
+            yval = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width()/2, yval + 0.02, f"{yval:.2f}", ha='center', va='bottom', fontsize=9, fontweight='bold')        
         st.pyplot(fig)
 
         patient_data = {

@@ -20,6 +20,10 @@ scaler = joblib.load("scaler.pkl")
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
+# Right after MongoDB connection (at the top)
+if "patient_id" not in st.session_state:
+    st.session_state["patient_id"] = ""
+
 
 # Field Keys
 field_keys = [
@@ -56,11 +60,11 @@ st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=Tr
 
 # --- Patient ID Section ---
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
-patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id")
+patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id", value=st.session_state["patient_id"])
 
 # Show previous predictions
 if patient_id:
-    previous_records = list(collection.find({"patient_id": patient_id}))
+    previous_records = list(collection.find({"patient_id": patient_id})
     if previous_records:
         with st.expander(" View Previous Predictions for this Patient ID"):
             for record in previous_records:
@@ -144,13 +148,9 @@ left, right = st.columns(2)
 
 with left:
     if st.button("RESET"):
-        # Clear Patient ID + Clinical Inputs safely
-        keys_to_clear = field_keys + ["patient_id"]
-        for k in keys_to_clear:
-            if k in st.session_state:
-                del st.session_state[k]
+        for k in field_keys + ["patient_id"]:
+            st.session_state[k] = ""
         st.rerun()
-
 
 with right:
     predict_clicked = st.button("PREDICT")

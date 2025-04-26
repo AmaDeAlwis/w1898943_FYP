@@ -217,25 +217,6 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
         
-            fig, ax = plt.subplots(figsize=(2.5, 2.5))  # 📏 Much smaller!
-            bars = ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#ff69b4", width=0.5)
-            
-            ax.set_ylim(0, 1)
-            ax.set_ylabel("Survival Probability", fontsize=8)
-            ax.set_title("Survival at 5 and 10 Years", fontsize=10, fontweight="bold", pad=10)
-            ax.tick_params(axis='x', labelsize=8)
-            ax.tick_params(axis='y', labelsize=8)
-            ax.spines['top'].set_visible(False)
-            ax.spines['right'].set_visible(False)
-            
-            # Annotate values nicely above bars
-            for bar in bars:
-                yval = bar.get_height()
-                ax.text(bar.get_x() + bar.get_width()/2, yval + 0.03, f"{yval:.2f}", 
-                        ha='center', va='bottom', fontsize=8, fontweight='bold')
-            
-            # Actually plot in Streamlit
-            st.pyplot(fig)
         patient_data = {
             "patient_id": patient_id,
             "age": age,
@@ -263,4 +244,26 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
         fig, ax = plt.subplots()
+        # --- Compact Survival Bar Chart ---
+st.markdown("<h4 style='text-align: center; color: #c2185b;'>Survival Probability Overview</h4>", unsafe_allow_html=True)
+
+fig, ax = plt.subplots(figsize=(2.5, 2.5))  # 📏 Much smaller chart
+
+bars = ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#ff69b4", width=0.5)
+
+ax.set_ylim(0, 1)
+ax.set_ylabel("Survival Probability", fontsize=8)
+ax.set_title("Survival at 5 and 10 Years", fontsize=10, fontweight="bold", pad=10)
+ax.tick_params(axis='x', labelsize=8)
+ax.tick_params(axis='y', labelsize=8)
+ax.spines['top'].set_visible(False)
+ax.spines['right'].set_visible(False)
+
+# Add survival values above bars
+for bar in bars:
+    yval = bar.get_height()
+    ax.text(bar.get_x() + bar.get_width()/2, yval + 0.03, f"{yval:.2f}", 
+            ha='center', va='bottom', fontsize=8, fontweight='bold')
+
+st.pyplot(fig)
 

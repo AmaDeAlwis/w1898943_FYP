@@ -20,10 +20,10 @@ scaler = joblib.load("scaler.pkl")
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
-# Right after MongoDB connection (at the top)
+
+# Initialize Patient ID safely
 if "patient_id" not in st.session_state:
     st.session_state["patient_id"] = ""
-
 
 # Field Keys
 field_keys = [
@@ -60,7 +60,7 @@ st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=Tr
 
 # --- Patient ID Section ---
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
-patient_id = st.text_input("Patient ID (Required to Save Record)", key="patient_id", value=st.session_state["patient_id"])
+patient_id = st.text_input("Patient ID (Required to Save Record)", value=st.session_state["patient_id"], key="patient_id")
 
 # Show previous predictions
 if patient_id:
@@ -168,7 +168,6 @@ if predict_clicked:
     elif not st.session_state.lymph_nodes_examined.isdigit() or int(st.session_state.lymph_nodes_examined) < 0:
         st.warning("Lymph Nodes must be a non-negative number.")
     else:
-        # Preprocessing
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
         menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
@@ -198,13 +197,11 @@ if predict_clicked:
         edge_index = torch.tensor([[0], [0]], dtype=torch.long)
         graph_data = Data(x=x_tensor, edge_index=edge_index)
 
-        # Predict
         with torch.no_grad():
             time_output, event_output = gcn_model(graph_data)
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        # Display predictions
         st.markdown(f"""
             <div style='display: flex; justify-content: center; margin-top: 2rem;'>
                 <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
@@ -217,7 +214,6 @@ if predict_clicked:
             </div>
         """, unsafe_allow_html=True)
 
-        # Save
         patient_data = {
             "patient_id": patient_id,
             "age": age,
@@ -237,7 +233,6 @@ if predict_clicked:
         }
         collection.insert_one(patient_data)
 
-        # Success Message
         st.markdown("""
             <div style='background-color: #d4edda; padding: 1rem; border-radius: 10px;
                         color: #155724; border: 1px solid #c3e6cb;

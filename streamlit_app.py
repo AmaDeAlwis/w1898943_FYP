@@ -6,6 +6,9 @@ from torch_geometric.data import Data
 import joblib
 from pymongo import MongoClient
 import datetime
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from gcn_model_class import SurvivalGNN
 
 # --- Streamlit Config ---
@@ -55,7 +58,7 @@ h1 {
     font-weight: bold;
 }
 .result-heading {
-    font-size: 20px;
+    font-size: 22px;
     color: #c2185b;
     margin-top: 2rem;
     font-weight: bold;
@@ -70,13 +73,13 @@ st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=Tr
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
 patient_id = st.text_input("Patient ID (Required)", value=st.session_state["patient_id"], key="patient_id")
 
-# --- Show Previous Predictions if available ---
+# --- Show Previous Predictions ---
 if patient_id:
     previous_records = list(collection.find({"patient_id": patient_id}))
     if previous_records:
-        with st.expander(" View Previous Predictions for this Patient ID"):
+        with st.expander("View Previous Predictions for this Patient ID"):
             for record in previous_records:
-                st.write(f" Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write(f"Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
                 st.write(f"🔹 5-Year Survival: {record['survival_5yr']:.2f}")
                 st.write(f"🔹 10-Year Survival: {record['survival_10yr']:.2f}")
                 st.markdown("---")
@@ -86,7 +89,6 @@ st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_ht
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
-
     if st.session_state.get("age", ""):
         if not st.session_state.age.isdigit():
             st.warning("Age must be a number.")
@@ -151,7 +153,7 @@ with col4:
                                    ["", "Yes", "No"].index(st.session_state["hormone_therapy"]),
                                    key="hormone_therapy")
 
-# --- Buttons (Reset / Predict) ---
+# --- Buttons ---
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
@@ -172,7 +174,6 @@ if predict_clicked:
     elif "" in required_fields:
         st.warning("Please fill all required fields")
     else:
-        # --- Preprocessing ---
         age = int(st.session_state.age)
         lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
         menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
@@ -202,151 +203,78 @@ if predict_clicked:
         edge_index = torch.tensor([[0], [0]], dtype=torch.long)
         graph_data = Data(x=x_tensor, edge_index=edge_index)
 
-        # --- Predict ---
         with torch.no_grad():
             time_output, event_output = gcn_model(graph_data)
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        # --- Display Predictions ---
-        st.markdown(f"""
-            <div style='display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2rem;'>
-                <div style='background-color: #ffffff; padding: 2rem; border-radius: 15px;
-                            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                            width: 100%; max-width: 600px; text-align: center;'>
-                    <h3 style='color: #c2185b;'> Survival Predictions</h3>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>5-Year Survival Probability: {survival_5yr:.2f}</p>
-                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>10-Year Survival Probability: {survival_10yr:.2f}</p>
-                </div>
-            </div>
-        """, unsafe_allow_html=True)
-
-        patient_data = {
-            "patient_id": patient_id,
-            "age": age,
-            "menopausal_status": st.session_state.menopausal_status,
-            "tumor_stage": tumor_stage,
-            "lymph_nodes_examined": lymph_nodes_examined,
-            "er_status": st.session_state.er_status,
-            "pr_status": st.session_state.pr_status,
-            "her2_status": st.session_state.her2_status,
-            "chemotherapy": st.session_state.chemotherapy,
-            "surgery": st.session_state.surgery,
-            "radiotherapy": st.session_state.radiotherapy,
-            "hormone_therapy": st.session_state.hormone_therapy,
-            "timestamp": datetime.datetime.now(),
-            "survival_5yr": survival_5yr,
-            "survival_10yr": survival_10yr
-        }
-        collection.insert_one(patient_data)
-
         st.success("✅ Patient record successfully saved!")
 
-        # --- Results Overview ---
+        # --- Results Overview Heading ---
         st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns([1,1,1])
+
+        col1, col2, col3 = st.columns([1, 1, 1])
 
         with col1:
             fig_bar, ax_bar = plt.subplots(figsize=(3, 3))
             bars = ax_bar.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4")
             ax_bar.set_ylim(0, 1)
-            ax_bar.set_ylabel("Probability")
-            ax_bar.set_title("Survival Probability", fontsize=10, fontweight="bold", pad=10)  # <<< smaller title
+            ax_bar.set_ylabel("Probability", fontsize=10)
+            ax_bar.set_title("Survival Probability", fontsize=12, fontweight="bold", pad=10)
             for bar, value in zip(bars, [survival_5yr, survival_10yr]):
-                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.03, f"{value:.2f}", 
-                            ha='center', va='bottom', fontsize=8, fontweight='bold')  # <<< smaller label
+                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.02, f"{value:.2f}", ha='center', va='bottom', fontsize=9, fontweight='bold')
             ax_bar.spines['top'].set_visible(False)
             ax_bar.spines['right'].set_visible(False)
             st.pyplot(fig_bar)
 
-
         with col2:
+            risk_text = '🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'
+            recommendation_text = 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'
+
             st.markdown(
                 f"""
-                <div style='background-color:#ffffff; height:442px; border-radius:15px; 
-                display:flex; flex-direction:column; justify-content:center; align-items:center; 
-                box-shadow:0 4px 8px rgba(0,0,0,0.1); padding:1rem;'>
-                    <div style='color:red; font-weight:bold; font-size:20px; margin-bottom:10px;'>
-                        {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'}
-                    </div>
-                    <div style='color:#333366; font-size:16px; text-align:center;'>
-                        {'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'}
-                    </div>
+                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px; height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center;'>
+                    <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'>{risk_text}</div>
+                    <div style='color: #333366; font-size: 16px; text-align: center;'>{recommendation_text}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
-       
 
         with col3:
-            fig_curve, ax_curve = plt.subplots(figsize=(3,3))
-            x_vals = np.array([0, 60, 120])/120
-            y_vals = np.array([survival_5yr, (survival_5yr+survival_10yr)/2, survival_10yr])
-            ax_curve.plot(x_vals, y_vals, marker='o', color='#FF69B4')
+            fig_curve, ax_curve = plt.subplots(figsize=(3, 3))
+            x_vals = np.array([0, 60, 120]) / 120
+            y_vals = np.array([survival_5yr, (survival_5yr + survival_10yr)/2, survival_10yr])
+            ax_curve.plot(x_vals, y_vals, color='#FF69B4', marker='o')
             ax_curve.set_ylim(0, 1)
-            ax_curve.set_xlabel("Time")
-            ax_curve.set_ylabel("Survival Probability")
-            ax_curve.set_title("Estimated Survival Curve", fontweight="bold", fontsize=10)
+            ax_curve.set_xlabel("Time", fontsize=10)
+            ax_curve.set_ylabel("Survival Probability", fontsize=10)
+            ax_curve.set_title("Estimated Survival Curve", fontsize=12, fontweight="bold")
             ax_curve.spines['top'].set_visible(False)
             ax_curve.spines['right'].set_visible(False)
             st.pyplot(fig_curve)
 
-            # --- After your 3 visualization columns (col1, col2, col3), paste this:
+        # --- Download Button for PDF ---
+        pdf_buffer = BytesIO()
+        c = canvas.Canvas(pdf_buffer, pagesize=letter)
+        width, height = letter
 
-                     # --- Add this CSS first (this fixes button size nicely)
-            st.markdown("""
-                <style>
-                .stDownloadButton > button {
-                    width: 250px;
-                    height: 50px;
-                    background-color: #f8bbd0;
-                    color: black;
-                    font-weight: bold;
-                    font-size: 16px;
-                    border-radius: 10px;
-                    border: 1px solid #ad1457;
-                }
-                </style>
-            """, unsafe_allow_html=True)
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(100, height - 100, "Breast Cancer Survival Prediction Report")
 
-                # --- Now the download button (no weird layout)
-                from io import BytesIO
-                from reportlab.lib.pagesizes import letter
-                from reportlab.pdfgen import canvas
-                
-                # Create PDF in memory
-                pdf_buffer = BytesIO()
-                c = canvas.Canvas(pdf_buffer, pagesize=letter)
-                width, height = letter
-                
-                c.setFont("Helvetica-Bold", 16)
-                c.drawString(100, height - 100, "Breast Cancer Survival Prediction Report")
-                
-                c.setFont("Helvetica", 12)
-                c.drawString(100, height - 150, f"Patient ID: {patient_id}")
-                c.drawString(100, height - 180, f"5-Year Survival Probability: {survival_5yr:.2f}")
-                c.drawString(100, height - 210, f"10-Year Survival Probability: {survival_10yr:.2f}")
-                
-                risk_text = 'Low Survival Chance' if survival_5yr < 0.6 else 'Moderate Survival Chance' if survival_5yr < 0.8 else 'High Survival Chance'
-                recommendation_text = 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'
-                
-                c.drawString(100, height - 250, f"Risk Level: {risk_text}")
-                c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
-                c.save()
-                
-                pdf_buffer.seek(0)
-                
-                # Show the button LEFT aligned normally
-                left_col, _ = st.columns([1, 5])
-                with left_col:
-                    st.download_button(
-                        label="📄 Download Report as PDF",
-                        data=pdf_buffer,
-                        file_name=f"Survival_Report_{patient_id}.pdf",
-                        mime="application/pdf",
-                        key="final_download_button"
-                    )
-        
-                    
-            
-            
+        c.setFont("Helvetica", 12)
+        c.drawString(100, height - 150, f"Patient ID: {patient_id}")
+        c.drawString(100, height - 180, f"5-Year Survival Probability: {survival_5yr:.2f}")
+        c.drawString(100, height - 210, f"10-Year Survival Probability: {survival_10yr:.2f}")
+        c.drawString(100, height - 250, f"Risk Level: {risk_text}")
+        c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
+
+        c.save()
+        pdf_buffer.seek(0)
+
+        st.download_button(
+            label="📄 Download Report as PDF",
+            data=pdf_buffer,
+            file_name=f"Survival_Report_{patient_id}.pdf",
+            mime="application/pdf",
+        )

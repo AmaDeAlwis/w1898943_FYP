@@ -247,23 +247,23 @@ if predict_clicked:
         col1, col2, col3 = st.columns([1,1,1])
 
         with col1:
-            fig_bar, ax_bar = plt.subplots(figsize=(3,3))
+            fig_bar, ax_bar = plt.subplots(figsize=(3, 3))
             bars = ax_bar.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4")
             ax_bar.set_ylim(0, 1)
             ax_bar.set_ylabel("Probability")
-            ax_bar.set_title("Survival Probability", fontsize=10, fontweight="bold", pad=10)
+            ax_bar.set_title("Survival Probability", fontsize=10, fontweight="bold", pad=10)  # <<< smaller title
             for bar, value in zip(bars, [survival_5yr, survival_10yr]):
-                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.03, 
-                            f"{value:.2f}", ha='center', va='bottom', fontsize=8, fontweight='bold')
-
+                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.03, f"{value:.2f}", 
+                            ha='center', va='bottom', fontsize=8, fontweight='bold')  # <<< smaller label
             ax_bar.spines['top'].set_visible(False)
             ax_bar.spines['right'].set_visible(False)
             st.pyplot(fig_bar)
 
+
         with col2:
             st.markdown(
                 f"""
-                <div style='background-color:#ffffff; height:320px; border-radius:15px; 
+                <div style='background-color:#ffffff; height:400px; border-radius:15px; 
                 display:flex; flex-direction:column; justify-content:center; align-items:center; 
                 box-shadow:0 4px 8px rgba(0,0,0,0.1); padding:1rem;'>
                     <div style='color:red; font-weight:bold; font-size:20px; margin-bottom:10px;'>

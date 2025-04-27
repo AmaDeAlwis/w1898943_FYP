@@ -253,7 +253,8 @@ if predict_clicked:
             ax_bar.set_ylabel("Probability")
             ax_bar.set_title("Survival Probability", fontweight="bold", fontsize=12)
             for bar, value in zip(bars, [survival_5yr, survival_10yr]):
-                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.02, f"{value:.2f}", ha='center', va='bottom', fontweight='bold')
+                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.05, 
+                            f"{value:.2f}", ha='center', va='bottom', fontsize=9, fontweight='bold')
             ax_bar.spines['top'].set_visible(False)
             ax_bar.spines['right'].set_visible(False)
             st.pyplot(fig_bar)
@@ -261,17 +262,19 @@ if predict_clicked:
         with col2:
             st.markdown(
                 f"""
-                <div style='background-color:#ffffff; height:400px; border-radius:15px; display:flex; flex-direction:column; justify-content:center; align-items:center; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding:1rem;'>
+                <div style='background-color:#ffffff; height:450px; border-radius:15px; 
+                display:flex; flex-direction:column; justify-content:center; align-items:center; 
+                box-shadow:0 4px 8px rgba(0,0,0,0.1); padding:1rem;'>
                     <div style='color:red; font-weight:bold; font-size:20px; margin-bottom:10px;'>
-                    {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'}
+                        {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'}
                     </div>
                     <div style='color:#333366; font-size:16px; text-align:center;'>
-                    {'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'}
+                        {'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'}
                     </div>
                 </div>
                 """,
                 unsafe_allow_html=True
-            )
+       
 
         with col3:
             fig_curve, ax_curve = plt.subplots(figsize=(3,3))

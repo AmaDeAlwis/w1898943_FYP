@@ -235,7 +235,7 @@ if predict_clicked:
         col1, col2, col3 = st.columns([1, 1, 1])
 
         with col1:
-            fig_bar, ax_bar = plt.subplots(figsize=(3, 3))
+            fig_bar, ax_bar = plt.subplots(figsize=(4, 4))
             bars = ax_bar.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4", width=0.4)
             ax_bar.set_ylim(0, 1)
             ax_bar.set_ylabel("Probability", fontsize=10)
@@ -259,7 +259,7 @@ if predict_clicked:
             """, unsafe_allow_html=True)
 
         with col3:
-            fig_curve, ax_curve = plt.subplots(figsize=(3, 3))
+            fig_curve, ax_curve = plt.subplots(figsize=(4, 4))
             x_vals = np.array([0, 60, 120]) / 120
             y_vals = np.array([survival_5yr, (survival_5yr + survival_10yr) / 2, survival_10yr])
             ax_curve.plot(x_vals, y_vals, color='#FF69B4', marker='o')

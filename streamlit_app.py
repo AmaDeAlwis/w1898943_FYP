@@ -78,8 +78,8 @@ if patient_id:
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
-    age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
-    if age.strip():
+    st.text_input("Age", key="age")
+    if st.session_state.age.strip():
         if not age.isdigit():
             st.warning(" Age must be a number")
         elif int(age) < 20:

@@ -233,40 +233,40 @@ if predict_clicked:
         st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns([1, 1, 1])
-
+        
         with col1:
-            fig_bar, ax_bar = plt.subplots(figsize=(4, 4))
-            bars = ax_bar.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4", width=0.4)
-            ax_bar.set_ylim(0, 1)
-            ax_bar.set_ylabel("Probability", fontsize=10)
-            ax_bar.set_title("Survival Probability", fontsize=12, fontweight="bold", pad=15)
-            for bar, value in zip(bars, [survival_5yr, survival_10yr]):
-                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.02, f"{value:.2f}", ha='center', va='bottom', fontsize=10, fontweight='bold')
-            ax_bar.spines['top'].set_visible(False)
-            ax_bar.spines['right'].set_visible(False)
-            st.pyplot(fig_bar)
-
+            with st.container():
+                st.markdown("""
+                    <div style='background-color: white; padding: 1rem; height: 400px; border-radius: 20px;'>
+                """, unsafe_allow_html=True)
+                
+                # Bar chart inside
+                fig_bar, ax_bar = plt.subplots(figsize=(3, 3))
+                # your bar chart code here
+                st.pyplot(fig_bar)
+        
+                st.markdown("</div>", unsafe_allow_html=True)
+        
         with col2:
-            st.markdown(f"""
-                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px; height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
-                    <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'> 
-                        {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'} 
-                    </div>
-                    <div style='color: #333366; font-size: 16px; text-align: center;'>
-                        { 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.' }
-                    </div>
-                </div>
-            """, unsafe_allow_html=True)
-
+            with st.container():
+                st.markdown("""
+                    <div style='background-color: white; padding: 1rem; height: 400px; border-radius: 20px;'>
+                """, unsafe_allow_html=True)
+        
+                # Risk + Recommendation text here
+        
+                st.markdown("</div>", unsafe_allow_html=True)
+        
         with col3:
-            fig_curve, ax_curve = plt.subplots(figsize=(4, 4))
-            x_vals = np.array([0, 60, 120]) / 120
-            y_vals = np.array([survival_5yr, (survival_5yr + survival_10yr) / 2, survival_10yr])
-            ax_curve.plot(x_vals, y_vals, color='#FF69B4', marker='o')
-            ax_curve.set_ylim(0, 1)
-            ax_curve.set_xlabel("Time", fontsize=10)
-            ax_curve.set_ylabel("Survival Probability", fontsize=10)
-            ax_curve.set_title("Estimated Survival Curve", fontsize=12, fontweight="bold")
-            ax_curve.spines['top'].set_visible(False)
-            ax_curve.spines['right'].set_visible(False)
-            st.pyplot(fig_curve)
+            with st.container():
+                st.markdown("""
+                    <div style='background-color: white; padding: 1rem; height: 400px; border-radius: 20px;'>
+                """, unsafe_allow_html=True)
+        
+                # Survival curve inside
+                fig_curve, ax_curve = plt.subplots(figsize=(3, 3))
+                # your curve chart code here
+                st.pyplot(fig_curve)
+        
+                st.markdown("</div>", unsafe_allow_html=True)
+

@@ -263,7 +263,7 @@ if predict_clicked:
         with col2:
             st.markdown(
                 f"""
-                <div style='background-color:#ffffff; height:445px; border-radius:15px; 
+                <div style='background-color:#ffffff; height:442px; border-radius:15px; 
                 display:flex; flex-direction:column; justify-content:center; align-items:center; 
                 box-shadow:0 4px 8px rgba(0,0,0,0.1); padding:1rem;'>
                     <div style='color:red; font-weight:bold; font-size:20px; margin-bottom:10px;'>

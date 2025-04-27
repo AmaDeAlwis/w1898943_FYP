@@ -291,19 +291,6 @@ if predict_clicked:
             ax_curve.spines['right'].set_visible(False)
             st.pyplot(fig_curve)
 
-            # Add this AFTER your 3 visualization columns (col1, col2, col3)
-
-            # Left-align the download button
-            col_left, col_spacer = st.columns([0.2, 0.8])  # 20% width for button, 80% empty
-            with col_left:
-                st.download_button(
-                    label="📄 Download Report as PDF",
-                    data=pdf_buffer,
-                    file_name=f"Survival_Report_{patient_id}.pdf",
-                    mime="application/pdf",
-                )
-
-
        # --- Generate PDF ---
             from io import BytesIO
             from reportlab.lib.pagesizes import letter
@@ -329,5 +316,15 @@ if predict_clicked:
             
             c.save()
             pdf_buffer.seek(0)
+
+                        # --- Create download button (LEFT aligned nicely) ---
+            col_left, col_spacer = st.columns([0.2, 0.8])
+            with col_left:
+                st.download_button(
+                    label="📄 Download Report as PDF",
+                    data=pdf_buffer,
+                    file_name=f"Survival_Report_{patient_id}.pdf",
+                    mime="application/pdf",
+                   )
 
 

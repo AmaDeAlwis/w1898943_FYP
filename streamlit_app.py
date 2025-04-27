@@ -292,10 +292,13 @@ if predict_clicked:
             st.pyplot(fig_curve)
 
        # --- Generate PDF ---
+        # After all 3 visualizations (col1, col2, col3)
+
             from io import BytesIO
             from reportlab.lib.pagesizes import letter
             from reportlab.pdfgen import canvas
             
+            # Generate the PDF
             pdf_buffer = BytesIO()
             c = canvas.Canvas(pdf_buffer, pagesize=letter)
             width, height = letter
@@ -315,16 +318,20 @@ if predict_clicked:
             c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
             
             c.save()
+            
+            # Reset buffer
             pdf_buffer.seek(0)
-
-                        # --- Create download button (LEFT aligned nicely) ---
-            col_left, col_spacer = st.columns([0.2, 0.8])
-            with col_left:
-                st.download_button(
-                    label="📄 Download Report as PDF",
-                    data=pdf_buffer,
-                    file_name=f"Survival_Report_{patient_id}.pdf",
-                    mime="application/pdf",
-                   )
-
-
+            
+            # Create a wide container for better alignment
+            with st.container():
+                col_dl, _ = st.columns([0.3, 0.7])
+                with col_dl:
+                    st.download_button(
+                        label="📄 Download Report as PDF",
+                        data=pdf_buffer,
+                        file_name=f"Survival_Report_{patient_id}.pdf",
+                        mime="application/pdf",
+                    )
+            
+            
+            

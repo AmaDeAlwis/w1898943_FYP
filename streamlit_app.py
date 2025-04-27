@@ -264,21 +264,20 @@ if predict_clicked:
             st.pyplot(fig_bar)
         
         with col2:
-            # Risk Level + Recommendation (inside one container)
-            st.markdown(
-                f"""
-                <div style='background-color:#ffe6e6; padding: 2rem; border-radius: 10px; height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;'>
-                    <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'> 
-                        {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'} 
-                    </div>
-                    <div style='color: #333366; font-size: 16px; text-align: center;'>
-                        { 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.' }
-                    </div>
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-        
+        st.markdown(
+        f"""
+        <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px; height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 4px 8px rgba(0,0,0,0.1);'>
+            <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'> 
+                {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'} 
+            </div>
+            <div style='color: #333366; font-size: 16px; text-align: center;'>
+                { 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.' }
+            </div>
+        </div>
+      """,
+           unsafe_allow_html=True
+        )
+
         with col3:
             # Survival Curve
             fig_curve, ax_curve = plt.subplots(figsize=(3, 3))

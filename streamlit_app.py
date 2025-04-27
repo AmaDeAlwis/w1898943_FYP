@@ -291,18 +291,18 @@ if predict_clicked:
             ax_curve.spines['right'].set_visible(False)
             st.pyplot(fig_curve)
 
-       # --- Generate PDF ---
-        # After all 3 visualizations (col1, col2, col3)
+            # --- After your 3 visualization columns (col1, col2, col3), paste this:
 
             from io import BytesIO
             from reportlab.lib.pagesizes import letter
             from reportlab.pdfgen import canvas
             
-            # Generate the PDF
+            # --- Generate PDF in memory
             pdf_buffer = BytesIO()
             c = canvas.Canvas(pdf_buffer, pagesize=letter)
             width, height = letter
             
+            # Write text to the PDF
             c.setFont("Helvetica-Bold", 16)
             c.drawString(100, height - 100, "Breast Cancer Survival Prediction Report")
             
@@ -316,22 +316,23 @@ if predict_clicked:
             
             c.drawString(100, height - 250, f"Risk Level: {risk_text}")
             c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
-            
             c.save()
             
-            # Reset buffer
+            # Move to beginning
             pdf_buffer.seek(0)
             
-            # Create a wide container for better alignment
+            # --- LEFT aligned Download Button
             with st.container():
-                col_dl, _ = st.columns([0.3, 0.7])
-                with col_dl:
+                col_left, _ = st.columns([1, 5])  # Small left column
+                with col_left:
                     st.download_button(
                         label="📄 Download Report as PDF",
                         data=pdf_buffer,
                         file_name=f"Survival_Report_{patient_id}.pdf",
                         mime="application/pdf",
+                        key="download_pdf_button"
                     )
+
             
             
             

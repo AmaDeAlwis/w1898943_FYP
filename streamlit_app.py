@@ -78,7 +78,7 @@ st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_ht
 col1, col2 = st.columns(2)
 
 with col1:
-    st.session_state.age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
+    st.text_input("Age", value=st.session_state.get("age", ""), key="age")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
     tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
     lymph_nodes_examined = st.text_input("Lymph Nodes Examined", value=st.session_state.get("lymph_nodes_examined", ""), key="lymph_nodes_examined")

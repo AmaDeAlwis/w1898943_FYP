@@ -248,38 +248,51 @@ if predict_clicked:
         st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
 
         # --- Visualization Section ---
-        bar_col, middle_col, right_col = st.columns(3)
+        # --- Visualization Section ---
 
-        # 1. Bar Chart
-        with bar_col:
-            fig, ax = plt.subplots(figsize=(3, 3))
-            ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4", width=0.5)
-            ax.set_ylim(0, 1)
-            ax.set_title("Survival Probability", fontsize=10)
-            for i, v in enumerate([survival_5yr, survival_10yr]):
-                ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontsize=8)
-            st.pyplot(fig)
-
-        # 2. Risk Tag + Recommendation + Pie Charts
-        with middle_col:
-            # Risk Level
-            if survival_5yr > 0.80:
-                st.success("🟢 High Survival Chance")
-                st.info("Continue standard monitoring.")
-            elif 0.60 < survival_5yr <= 0.80:
-                st.warning("🟠 Moderate Survival Chance")
-                st.info("Consider more frequent follow-up.")
-            else:
-                st.error("🔴 Low Survival Chance")
-                st.info("Consider aggressive treatment planning.")
-
-        # 3. Survival Curve (Static or Fake Line Plot)
-        with right_col:
-            fig2, ax2 = plt.subplots(figsize=(3, 3))
-            ax2.plot([0, 60, 120], [1, survival_5yr, survival_10yr], marker='o', linestyle='-')
-            ax2.set_ylim(0, 1)
-            ax2.set_title("Estimated Survival Curve", fontsize=10)
-            ax2.set_xlabel("Months")
-            ax2.set_ylabel("Survival Probability")
-            st.pyplot(fig2)
-
+        # Create 3 equal columns
+        col1, col2, col3 = st.columns([1, 1, 1])
+        
+        with col1:
+            # Bar Chart
+            fig_bar, ax_bar = plt.subplots(figsize=(3, 3))
+            bars = ax_bar.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4", width=0.4)
+            ax_bar.set_ylim(0, 1)
+            ax_bar.set_ylabel("Probability", fontsize=10)
+            ax_bar.set_title("Survival Probability", fontsize=12, fontweight="bold", pad=15)
+            for bar, value in zip(bars, [survival_5yr, survival_10yr]):
+                ax_bar.text(bar.get_x() + bar.get_width()/2, value + 0.02, f"{value:.2f}", ha='center', va='bottom', fontsize=10, fontweight='bold')
+            ax_bar.spines['top'].set_visible(False)
+            ax_bar.spines['right'].set_visible(False)
+            st.pyplot(fig_bar)
+        
+        with col2:
+            # Risk Level + Recommendation (inside one container)
+            st.markdown(
+                f"""
+                <div style='background-color:#ffe6e6; padding: 2rem; border-radius: 10px; height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;'>
+                    <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'> 
+                        {'🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'} 
+                    </div>
+                    <div style='color: #333366; font-size: 16px; text-align: center;'>
+                        { 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.' }
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+        
+        with col3:
+            # Survival Curve
+            fig_curve, ax_curve = plt.subplots(figsize=(3, 3))
+            x_vals = np.array([0, 60, 120]) / 120  # Normalize 5-year and 10-year (0 to 1)
+            y_vals = np.array([survival_5yr, (survival_5yr + survival_10yr) / 2, survival_10yr])
+            ax_curve.plot(x_vals, y_vals, color='#FF69B4', marker='o')
+            ax_curve.set_ylim(0, 1)
+            ax_curve.set_xlabel("Time", fontsize=10)
+            ax_curve.set_ylabel("Survival Probability", fontsize=10)
+            ax_curve.set_title("Estimated Survival Curve", fontsize=12, fontweight="bold")
+            ax_curve.spines['top'].set_visible(False)
+            ax_curve.spines['right'].set_visible(False)
+            st.pyplot(fig_curve)
+        

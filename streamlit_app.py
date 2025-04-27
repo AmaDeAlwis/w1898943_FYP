@@ -233,7 +233,7 @@ if predict_clicked:
 
             st.markdown(
                 f"""
-                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px; height: 320px; display: flex; flex-direction: column; justify-content: center; align-items: center;'>
+                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px; height: 442px; display: flex; flex-direction: column; justify-content: center; align-items: center;'>
                     <div style='color: red; font-weight: bold; font-size: 20px; margin-bottom: 1rem;'>{risk_text}</div>
                     <div style='color: #333366; font-size: 16px; text-align: center;'>{recommendation_text}</div>
                 </div>

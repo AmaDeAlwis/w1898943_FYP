@@ -11,32 +11,32 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from gcn_model_class import SurvivalGNN
 
-# --- Streamlit Config ---
+#Streamlit configuration
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# --- Load Model & Scaler ---
+#Load model and scaler
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB Connection ---
+#MongoDB connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Initialize patient_id if not set ---
+#Initialize patient_id if not set
 if "patient_id" not in st.session_state:
     st.session_state["patient_id"] = ""
 
-# --- Field Keys ---
+#Field keys
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# --- Custom Styling ---
+#Styling
 st.markdown("""
 <style>
 h1 {
@@ -69,11 +69,11 @@ h1 {
 
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
-# --- Patient Information ---
+#Patient information
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
 patient_id = st.text_input("Patient ID (Required)", value=st.session_state["patient_id"], key="patient_id")
 
-# --- Show Previous Predictions ---
+#Show previous predictions
 if patient_id:
     previous_records = list(collection.find({"patient_id": patient_id}))
     if previous_records:
@@ -84,7 +84,7 @@ if patient_id:
                 st.write(f"🔹 10-Year Survival: {record['survival_10yr']:.2f}")
                 st.markdown("---")
 
-# --- Clinical Information ---
+#Clinical information
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
@@ -128,7 +128,7 @@ with col2:
                                ["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state["her2_status"]),
                                key="her2_status")
 
-# --- Treatment Information ---
+#Treatment information
 st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
@@ -153,7 +153,7 @@ with col4:
                                    ["", "Yes", "No"].index(st.session_state["hormone_therapy"]),
                                    key="hormone_therapy")
 
-# --- Buttons ---
+#Buttons
 left, right = st.columns(2)
 with left:
     if st.button("RESET"):
@@ -165,7 +165,7 @@ with left:
 with right:
     predict_clicked = st.button("PREDICT")
 
-# --- Prediction Logic ---
+#Prediction logic
 if predict_clicked:
     required_fields = [st.session_state.get(k, "") for k in field_keys]
 
@@ -208,9 +208,9 @@ if predict_clicked:
             survival_5yr = torch.sigmoid(time_output[0]).item()
             survival_10yr = torch.sigmoid(event_output[0]).item()
 
-        st.success("✅ Patient record successfully saved!")
+        st.success(" Patient record saved successfully!")
 
-        # --- Results Overview Heading ---
+        #Results overview heading
         st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
 
         col1, col2, col3 = st.columns([1, 1, 1])
@@ -228,7 +228,7 @@ if predict_clicked:
             st.pyplot(fig_bar)
 
         with col2:
-            risk_text = '🔴 Low Survival Chance' if survival_5yr < 0.6 else '🟡 Moderate Survival Chance' if survival_5yr < 0.8 else '🟢 High Survival Chance'
+            risk_text = ' Low Survival Chance' if survival_5yr < 0.6 else ' Moderate Survival Chance' if survival_5yr < 0.8 else ' High Survival Chance'
             recommendation_text = 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'
 
             st.markdown(
@@ -254,7 +254,7 @@ if predict_clicked:
             ax_curve.spines['right'].set_visible(False)
             st.pyplot(fig_curve)
 
-        # --- Download Button for PDF ---
+        #Download button for PDF
         pdf_buffer = BytesIO()
         c = canvas.Canvas(pdf_buffer, pagesize=letter)
         width, height = letter
@@ -273,7 +273,7 @@ if predict_clicked:
         pdf_buffer.seek(0)
 
         st.download_button(
-            label="📄 Download Report as PDF",
+            label="Download Report as PDF",
             data=pdf_buffer,
             file_name=f"Survival_Report_{patient_id}.pdf",
             mime="application/pdf",

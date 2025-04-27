@@ -293,46 +293,60 @@ if predict_clicked:
 
             # --- After your 3 visualization columns (col1, col2, col3), paste this:
 
-            from io import BytesIO
-            from reportlab.lib.pagesizes import letter
-            from reportlab.pdfgen import canvas
-            
-            # --- Generate PDF in memory
-            pdf_buffer = BytesIO()
-            c = canvas.Canvas(pdf_buffer, pagesize=letter)
-            width, height = letter
-            
-            # Write text to the PDF
-            c.setFont("Helvetica-Bold", 16)
-            c.drawString(100, height - 100, "Breast Cancer Survival Prediction Report")
-            
-            c.setFont("Helvetica", 12)
-            c.drawString(100, height - 150, f"Patient ID: {patient_id}")
-            c.drawString(100, height - 180, f"5-Year Survival Probability: {survival_5yr:.2f}")
-            c.drawString(100, height - 210, f"10-Year Survival Probability: {survival_10yr:.2f}")
-            
-            risk_text = 'Low Survival Chance' if survival_5yr < 0.6 else 'Moderate Survival Chance' if survival_5yr < 0.8 else 'High Survival Chance'
-            recommendation_text = 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'
-            
-            c.drawString(100, height - 250, f"Risk Level: {risk_text}")
-            c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
-            c.save()
-            
-            # Move to beginning
-            pdf_buffer.seek(0)
-            
-            # --- LEFT aligned Download Button
-            with st.container():
-                col_left, _ = st.columns([1, 5])  # Small left column
-                with col_left:
+                     # --- Add this CSS first (this fixes button size nicely)
+            st.markdown("""
+                <style>
+                .stDownloadButton > button {
+                    width: 250px;
+                    height: 50px;
+                    background-color: #f8bbd0;
+                    color: black;
+                    font-weight: bold;
+                    font-size: 16px;
+                    border-radius: 10px;
+                    border: 1px solid #ad1457;
+                }
+                </style>
+            """, unsafe_allow_html=True)
+
+                # --- Now the download button (no weird layout)
+                from io import BytesIO
+                from reportlab.lib.pagesizes import letter
+                from reportlab.pdfgen import canvas
+                
+                # Create PDF in memory
+                pdf_buffer = BytesIO()
+                c = canvas.Canvas(pdf_buffer, pagesize=letter)
+                width, height = letter
+                
+                c.setFont("Helvetica-Bold", 16)
+                c.drawString(100, height - 100, "Breast Cancer Survival Prediction Report")
+                
+                c.setFont("Helvetica", 12)
+                c.drawString(100, height - 150, f"Patient ID: {patient_id}")
+                c.drawString(100, height - 180, f"5-Year Survival Probability: {survival_5yr:.2f}")
+                c.drawString(100, height - 210, f"10-Year Survival Probability: {survival_10yr:.2f}")
+                
+                risk_text = 'Low Survival Chance' if survival_5yr < 0.6 else 'Moderate Survival Chance' if survival_5yr < 0.8 else 'High Survival Chance'
+                recommendation_text = 'Consider aggressive treatment planning.' if survival_5yr < 0.6 else 'Consider more frequent follow-up.' if survival_5yr < 0.8 else 'Continue standard monitoring.'
+                
+                c.drawString(100, height - 250, f"Risk Level: {risk_text}")
+                c.drawString(100, height - 280, f"Recommendation: {recommendation_text}")
+                c.save()
+                
+                pdf_buffer.seek(0)
+                
+                # Show the button LEFT aligned normally
+                left_col, _ = st.columns([1, 5])
+                with left_col:
                     st.download_button(
                         label="📄 Download Report as PDF",
                         data=pdf_buffer,
                         file_name=f"Survival_Report_{patient_id}.pdf",
                         mime="application/pdf",
-                        key="download_pdf_button"
+                        key="final_download_button"
                     )
-
-            
+        
+                    
             
             

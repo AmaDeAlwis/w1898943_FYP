@@ -274,6 +274,7 @@ if predict_clicked:
                 </div>
                 """,
                 unsafe_allow_html=True
+            )
        
 
         with col3:

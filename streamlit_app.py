@@ -286,7 +286,7 @@ if predict_clicked:
             ax_curve.set_ylim(0, 1)
             ax_curve.set_xlabel("Time")
             ax_curve.set_ylabel("Survival Probability")
-            ax_curve.set_title("Estimated Survival Curve", fontweight="bold", fontsize=12)
+            ax_curve.set_title("Estimated Survival Curve", fontweight="bold", fontsize=10)
             ax_curve.spines['top'].set_visible(False)
             ax_curve.spines['right'].set_visible(False)
             st.pyplot(fig_curve)

@@ -1,48 +1,48 @@
 import streamlit as st
 import torch
-import matplotlib.pyplot as plt
 import numpy as np
-import joblib
+import matplotlib.pyplot as plt
 from torch_geometric.data import Data
+import joblib
 from pymongo import MongoClient
 import datetime
 from gcn_model_class import SurvivalGNN
 
-# Configuration
+# --- Streamlit Config ---
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
-# Load model
+# --- Load Model & Scaler ---
 gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")
 
-# MongoDB Connection
+# --- MongoDB Connection ---
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Initialize Patient ID safely
+# --- Initialize patient_id if not set ---
 if "patient_id" not in st.session_state:
     st.session_state["patient_id"] = ""
 
-# Field Keys
+# --- Field Keys ---
 field_keys = [
     "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined",
     "er_status", "pr_status", "her2_status", "chemotherapy",
     "surgery", "radiotherapy", "hormone_therapy"
 ]
 
-# CSS Styling
+# --- Custom Styling ---
 st.markdown("""
 <style>
 h1 {
-    color: #ad1457 !important;
+    color: #ad1457;
     text-align: center;
     font-weight: bold;
 }
 .section-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
     margin-top: 2rem;
     margin-bottom: 0.5rem;
@@ -51,23 +51,43 @@ h1 {
 .stButton button {
     background-color: #ad1457 !important;
     color: white !important;
-    font-weight: bold;
     border-radius: 10px;
+    font-weight: bold;
+}
+.result-heading {
+    font-size: 22px;
+    color: #c2185b;
+    margin-top: 2rem;
+    font-weight: bold;
+    text-align: left;
 }
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
-# Patient ID Section
+# --- Patient Information ---
 st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
-patient_id = st.text_input("Patient ID (Required)", value=st.session_state.get("patient_id", ""), key="patient_id")
+patient_id = st.text_input("Patient ID (Required)", value=st.session_state["patient_id"], key="patient_id")
 
-# Clinical Information
+# --- Show Previous Predictions if available ---
+if patient_id:
+    previous_records = list(collection.find({"patient_id": patient_id}))
+    if previous_records:
+        with st.expander(" View Previous Predictions for this Patient ID"):
+            for record in previous_records:
+                st.write(f" Date: {record['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+                st.write(f"🔹 5-Year Survival: {record['survival_5yr']:.2f}")
+                st.write(f"🔹 10-Year Survival: {record['survival_10yr']:.2f}")
+                st.markdown("---")
+
+# --- Clinical Information ---
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
-    st.text_input("Age", value=st.session_state.get("age", ""), key="age")
+    age = st.text_input("Age", value=st.session_state.get("age", ""), key="age")
+
+    # ✅ Instant Age Validation
     if st.session_state.get("age", ""):
         if not st.session_state.age.isdigit():
             st.warning("Age must be a number.")
@@ -84,8 +104,7 @@ with col1:
                                ["", 1, 2, 3, 4].index(st.session_state["tumor_stage"]),
                                key="tumor_stage")
 
-    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", value=st.session_state.get("lymph_nodes_examined", ""),
-                                         key="lymph_nodes_examined")
+    lymph_nodes_examined = st.text_input("Lymph Nodes Examined", value=st.session_state.get("lymph_nodes_examined", ""), key="lymph_nodes_examined")
     if st.session_state.get("lymph_nodes_examined", ""):
         if not st.session_state.lymph_nodes_examined.isdigit():
             st.warning("Lymph Nodes must be a number.")
@@ -108,4 +127,159 @@ with col2:
                                ["", "Neutral", "Loss", "Gain", "Undef"].index(st.session_state["her2_status"]),
                                key="her2_status")
 
-# (The rest of the code continues exactly as you had previously, no change to your Prediction logic, Reset button etc.)
+# --- Treatment Information ---
+st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
+col3, col4 = st.columns(2)
+with col3:
+    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"],
+                                index=0 if "chemotherapy" not in st.session_state else
+                                ["", "Yes", "No"].index(st.session_state["chemotherapy"]),
+                                key="chemotherapy")
+
+    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"],
+                           index=0 if "surgery" not in st.session_state else
+                           ["", "Breast-conserving", "Mastectomy"].index(st.session_state["surgery"]),
+                           key="surgery")
+
+with col4:
+    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"],
+                                index=0 if "radiotherapy" not in st.session_state else
+                                ["", "Yes", "No"].index(st.session_state["radiotherapy"]),
+                                key="radiotherapy")
+
+    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"],
+                                   index=0 if "hormone_therapy" not in st.session_state else
+                                   ["", "Yes", "No"].index(st.session_state["hormone_therapy"]),
+                                   key="hormone_therapy")
+
+# --- Buttons (Reset / Predict) ---
+left, right = st.columns(2)
+with left:
+    if st.button("RESET"):
+        for k in list(st.session_state.keys()):
+            if k in field_keys + ["patient_id"]:
+                del st.session_state[k]
+        st.rerun()
+
+with right:
+    predict_clicked = st.button("PREDICT")
+
+# --- Prediction Logic ---
+if predict_clicked:
+    required_fields = [st.session_state.get(k, "") for k in field_keys]
+
+    if not patient_id:
+        st.warning("Please enter a Patient ID to save the record")
+    elif "" in required_fields:
+        st.warning("Please fill all required fields")
+    else:
+        # --- Preprocessing ---
+        age = int(st.session_state.age)
+        lymph_nodes_examined = int(st.session_state.lymph_nodes_examined)
+        menopausal_status = 1 if st.session_state.menopausal_status == "Post-menopausal" else 0
+        er_status = 1 if st.session_state.er_status == "Positive" else 0
+        pr_status = 1 if st.session_state.pr_status == "Positive" else 0
+        her2_val = st.session_state.her2_status
+        her2_neutral = 1 if her2_val == "Neutral" else 0
+        her2_loss = 1 if her2_val == "Loss" else 0
+        her2_gain = 1 if her2_val == "Gain" else 0
+        her2_undef = 1 if her2_val == "Undef" else 0
+        chemotherapy = 1 if st.session_state.chemotherapy == "Yes" else 0
+        radiotherapy = 1 if st.session_state.radiotherapy == "Yes" else 0
+        hormone_therapy = 1 if st.session_state.hormone_therapy == "Yes" else 0
+        surgery_conserving = 1 if st.session_state.surgery == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if st.session_state.surgery == "Mastectomy" else 0
+        tumor_stage = int(st.session_state.tumor_stage)
+
+        input_features = np.array([
+            age, chemotherapy, er_status, hormone_therapy, menopausal_status,
+            lymph_nodes_examined, pr_status, radiotherapy, tumor_stage,
+            surgery_conserving, surgery_mastectomy, her2_gain,
+            her2_loss, her2_neutral, her2_undef
+        ]).reshape(1, -1)
+
+        input_scaled = scaler.transform(input_features)
+        x_tensor = torch.tensor(input_scaled, dtype=torch.float32)
+        edge_index = torch.tensor([[0], [0]], dtype=torch.long)
+        graph_data = Data(x=x_tensor, edge_index=edge_index)
+
+        # --- Predict ---
+        with torch.no_grad():
+            time_output, event_output = gcn_model(graph_data)
+            survival_5yr = torch.sigmoid(time_output[0]).item()
+            survival_10yr = torch.sigmoid(event_output[0]).item()
+
+        # --- Display Predictions (White Box) ---
+        st.markdown(f"""
+            <div style='display: flex; justify-content: center; margin-top: 2rem; margin-bottom: 2rem;'>
+                <div style='background-color: #ffffff; padding: 2rem; border-radius: 20px;
+                            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.15);
+                            width: 100%; max-width: 600px; text-align: center;'>
+                    <h3 style='color: #c2185b;'> Survival Predictions</h3>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>5-Year Survival Probability: {survival_5yr:.2f}</p>
+                    <p style='font-size: 22px; font-weight: bold; color: #004d40;'>10-Year Survival Probability: {survival_10yr:.2f}</p>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+
+        # --- Save Record ---
+        patient_data = {
+            "patient_id": patient_id,
+            "age": age,
+            "menopausal_status": st.session_state.menopausal_status,
+            "tumor_stage": tumor_stage,
+            "lymph_nodes_examined": lymph_nodes_examined,
+            "er_status": st.session_state.er_status,
+            "pr_status": st.session_state.pr_status,
+            "her2_status": st.session_state.her2_status,
+            "chemotherapy": st.session_state.chemotherapy,
+            "surgery": st.session_state.surgery,
+            "radiotherapy": st.session_state.radiotherapy,
+            "hormone_therapy": st.session_state.hormone_therapy,
+            "timestamp": datetime.datetime.now(),
+            "survival_5yr": survival_5yr,
+            "survival_10yr": survival_10yr
+        }
+        collection.insert_one(patient_data)
+
+        st.success("✅ Patient record successfully saved!")
+
+        # --- Results Overview Heading ---
+        st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
+
+        # --- Visualization Section ---
+        bar_col, middle_col, right_col = st.columns(3)
+
+        # 1. Bar Chart
+        with bar_col:
+            fig, ax = plt.subplots(figsize=(3, 3))
+            ax.bar(["5-Year", "10-Year"], [survival_5yr, survival_10yr], color="#FF69B4", width=0.5)
+            ax.set_ylim(0, 1)
+            ax.set_title("Survival Probability", fontsize=10)
+            for i, v in enumerate([survival_5yr, survival_10yr]):
+                ax.text(i, v + 0.02, f"{v:.2f}", ha='center', fontsize=8)
+            st.pyplot(fig)
+
+        # 2. Risk Tag + Recommendation + Pie Charts
+        with middle_col:
+            # Risk Level
+            if survival_5yr > 0.80:
+                st.success("🟢 High Survival Chance")
+                st.info("Continue standard monitoring.")
+            elif 0.60 < survival_5yr <= 0.80:
+                st.warning("🟠 Moderate Survival Chance")
+                st.info("Consider more frequent follow-up.")
+            else:
+                st.error("🔴 Low Survival Chance")
+                st.info("Consider aggressive treatment planning.")
+
+        # 3. Survival Curve (Static or Fake Line Plot)
+        with right_col:
+            fig2, ax2 = plt.subplots(figsize=(3, 3))
+            ax2.plot([0, 60, 120], [1, survival_5yr, survival_10yr], marker='o', linestyle='-')
+            ax2.set_ylim(0, 1)
+            ax2.set_title("Estimated Survival Curve", fontsize=10)
+            ax2.set_xlabel("Months")
+            ax2.set_ylabel("Survival Probability")
+            st.pyplot(fig2)
+

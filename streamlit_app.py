@@ -316,6 +316,18 @@ if predict_clicked:
             
             c.save()
             pdf_buffer.seek(0)
+
+            st.markdown(
+                """
+                <style>
+                div.stDownloadButton > button {
+                    text-align: left;
+                    margin-left: 0;
+                }
+                </style>
+                """,
+                unsafe_allow_html=True
+            )
             
             st.download_button(
                 label="📄 Download Report as PDF",

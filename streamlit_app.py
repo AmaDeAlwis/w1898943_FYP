@@ -17,10 +17,10 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 #Load model and scaler
 gcn_model = SurvivalGNN(
     in_channels=15,
-    hidden_channels=16,
+    hidden_channels=192,
     out_channels_time=1,
     out_channels_event=1,
-    dropout_rate=0.20029477969862097
+    dropout_rate=0.16852060520867967
 )
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()

@@ -15,7 +15,13 @@ from gcn_model_class import SurvivalGNN
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 
 #Load model and scaler
-gcn_model = SurvivalGNN(in_channels=15, out_channels_time=1, out_channels_event=1)
+gcn_model = SurvivalGNN(
+    in_channels=15,
+    hidden_channels=16,
+    out_channels_time=1,
+    out_channels_event=1,
+    dropout_rate=0.20029477969862097
+)
 gcn_model.load_state_dict(torch.load(".streamlit/gcn_model.pt", map_location=torch.device("cpu")))
 gcn_model.eval()
 scaler = joblib.load("scaler.pkl")

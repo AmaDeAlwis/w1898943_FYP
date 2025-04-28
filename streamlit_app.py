@@ -204,12 +204,18 @@ if predict_clicked:
         graph_data = Data(x=x_tensor, edge_index=edge_index)
 
         with torch.no_grad():
-            time_output, event_output = gcn_model(graph_data)
-            survival_5yr = torch.sigmoid(time_output[0]).item()
-            survival_10yr = torch.sigmoid(event_output[0]).item()
+            survival_time_pred, event_status_pred = gcn_model(graph_data)
+
+        # Process outputs correctly
+        predicted_survival_time = survival_time_pred.item()
+        predicted_survival_time = max(predicted_survival_time, 1e-3)  # Avoid division by zero
+
+        # Calculate survival probabilities at 5 and 10 years
+        survival_5yr = np.exp(-60 / predicted_survival_time)
+        survival_10yr = np.exp(-120 / predicted_survival_time)
 
         st.success(" Patient record saved successfully!")
-
+        
         #Results overview heading
         st.markdown("<p class='result-heading'>Results Overview</p>", unsafe_allow_html=True)
 

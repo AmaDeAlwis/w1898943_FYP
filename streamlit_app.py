@@ -9,18 +9,20 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- RESET MECHANISM before widgets render ---
-if "reset_now" in st.session_state and st.session_state.reset_now:
-    for key in [
-        "patient_id", "age", "nodes", "meno", "stage",
-        "her2", "er", "pr", "chemo", "surgery", "radio", "hormone",
-        "surv_5yr", "surv_10yr", "times", "surv_func", "predicted"
-    ]:
-        st.session_state.pop(key, None)
-    st.session_state.reset_now = False
-    st.experimental_rerun()
+# --- SAFE RESET before widget rendering ---
+if st.session_state.get("reset_now", False):
+    # Only rerun if session was initialized (avoids crash)
+    if any(k in st.session_state for k in ["age", "nodes", "patient_id"]):
+        for key in [
+            "patient_id", "age", "nodes", "meno", "stage",
+            "her2", "er", "pr", "chemo", "surgery", "radio", "hormone",
+            "surv_5yr", "surv_10yr", "times", "surv_func", "predicted"
+        ]:
+            st.session_state.pop(key, None)
+        st.session_state.reset_now = False
+        st.experimental_rerun()
 
-# --- INITIAL STATE SETUP ---
+# --- INITIAL SESSION STATE ---
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
@@ -77,7 +79,7 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at Bottom ---
+# --- Buttons at the Bottom ---
 b1, b2 = st.columns(2)
 with b1:
     if st.button("RESET"):
@@ -168,7 +170,7 @@ if st.session_state.get("predicted", False):
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF report
+    # PDF Report
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")

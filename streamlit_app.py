@@ -84,8 +84,15 @@ with b2:
     predict = st.button("PREDICT")
 
 if reset:
-    for k in list(st.session_state.keys()):
-        del st.session_state[k]
+    # Safe Reset: clear only app variables, not critical Streamlit internals
+    keys_to_clear = [
+        "patient_id", "age", "nodes", "meno", "stage",
+        "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"
+    ]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
+    
     st.experimental_rerun()
 
 # ---- Prediction ----

@@ -15,11 +15,11 @@ if "reset_now" not in st.session_state:
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
-# ----------------------- Load model & scaler -----------------------
+# ----------------------- Load Model & Scaler -----------------------
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# ----------------------- MongoDB Setup -----------------------
+# ----------------------- MongoDB -----------------------
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
@@ -40,13 +40,12 @@ st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True
 
 # ----------------------- Safe Reset Before Inputs -----------------------
 if st.session_state.reset_now:
-    keys_to_clear = [
-        "patient_id", "age", "nodes", "meno", "stage",
-        "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"
-    ]
-    for key in keys_to_clear:
-        if key in st.session_state:
-            del st.session_state[key]
+    reset_defaults = {
+        "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
+        "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "", "radio": "", "hormone": ""
+    }
+    for k, v in reset_defaults.items():
+        st.session_state[k] = v
     st.session_state.predicted = False
     st.session_state.reset_now = False
 
@@ -73,7 +72,7 @@ with col1:
     if lymph_nodes:
         try:
             if int(lymph_nodes) < 0:
-                st.warning("Lymph Nodes must be a non-negative number")
+                st.warning("Lymph Nodes must be non-negative")
         except:
             st.warning("Lymph Nodes must be a number")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="meno")
@@ -170,10 +169,13 @@ if st.session_state.predicted:
     with c2:
         if st.session_state.surv_5yr < 0.5:
             st.error("Low Survival Chance")
+            st.info("Patient shows low probability. Consider aggressive treatment planning.")
         elif st.session_state.surv_5yr < 0.75:
             st.warning("Moderate Survival Chance")
+            st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
         else:
             st.success("High Survival Chance")
+            st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
 
     with c3:
         fig2, ax2 = plt.subplots()
@@ -183,7 +185,7 @@ if st.session_state.predicted:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF download
+    # PDF Download
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")
@@ -191,4 +193,5 @@ if st.session_state.predicted:
     c.drawString(100, 710, f"10-Year Survival: {st.session_state.surv_10yr:.2f}")
     c.save()
     pdf.seek(0)
+
     st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

@@ -1,4 +1,3 @@
-# Final CoxPH-based Streamlit UI (Reset, Validation, MongoDB Save, Predictions in Container)
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -10,46 +9,30 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Set page config ---
-st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
-
-# --- CSS Styling ---
-st.markdown('''
-<style>
-h1 { color: #ad1457; text-align: center; font-weight: bold; }
-.section-title { font-size: 22px; font-weight: bold; color: #ad1457; margin-top: 2rem; margin-bottom: 1rem; }
-.result-heading { font-size: 22px; color: #ad1457; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; }
-.white-box { background-color: white; padding: 1.5rem; border-radius: 10px; margin-bottom: 2rem; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-.stButton > button { background-color: #ad1457 !important; color: white !important; border-radius: 10px; font-weight: bold; }
-</style>
-''', unsafe_allow_html=True)
-
-# --- Load model and scaler ---
+# Load model and scaler
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB ---
+# MongoDB connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Field Keys ---
-field_keys = ["patient_id", "age", "menopausal_status", "tumor_stage", "lymph_nodes_examined", "er_status", "pr_status", "her2_status", "chemotherapy", "surgery", "radiotherapy", "hormone_therapy"]
+# Styling
+st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
+st.markdown("""
+<style>
+h1 { color: #ad1457; text-align: center; font-weight: bold; }
+.section-title { font-size: 22px; font-weight: bold; color: #ad1457; margin-top: 2rem; margin-bottom: 1rem; }
+.stButton button { background-color: #ad1457 !important; color: white !important; border-radius: 10px; font-weight: bold; }
+.result-heading { font-size: 22px; color: #ad1457; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; }
+.white-box { background-color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; }
+</style>
+""", unsafe_allow_html=True)
 
-# --- Reset ---
-if "reset_flag" not in st.session_state:
-    st.session_state.reset_flag = False
-if st.button("RESET"):
-    for key in field_keys:
-        if key in st.session_state:
-            del st.session_state[key]
-    st.session_state.reset_flag = True
-    st.experimental_rerun()
-
-# --- Title ---
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Input Fields ---
+# ---- Patient ID ----
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -58,48 +41,68 @@ if patient_id:
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
+# ---- Input Columns ----
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", key="age")
-    lymph_nodes = st.text_input("Lymph Nodes Examined", key="lymph_nodes_examined")
-    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="menopausal_status")
-    tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="tumor_stage")
+    if age:
+        try:
+            if int(age) < 20:
+                st.warning("Age must be a number and ≥ 20")
+        except:
+            st.warning("Age must be a number")
+    lymph_nodes = st.text_input("Lymph Nodes Examined", key="nodes")
+    if lymph_nodes:
+        try:
+            if int(lymph_nodes) < 0:
+                st.warning("Lymph Nodes Examined must be a non-negative number")
+        except:
+            st.warning("Lymph Nodes Examined must be a number")
+    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="meno")
+    tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="stage")
+
 with col2:
-    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er_status")
-    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr_status")
-    her2_status = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2_status")
+    her2 = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2")
+    er = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er")
+    pr = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr")
 
 st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
-    chemotherapy = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemotherapy")
+    chemo = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemo")
     surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"], key="surgery")
 with col4:
-    radiotherapy = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radiotherapy")
-    hormone_therapy = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone_therapy")
+    radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
+    hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Predict ---
-predict_clicked = st.button("PREDICT")
-if predict_clicked:
-    required_values = [st.session_state.get(k, "") for k in field_keys]
-    if "" in required_values:
-        st.error("Please fill all fields before predicting.")
-    elif not age.isdigit() or int(age) < 20:
-        st.warning("Age must be a number ≥ 20.")
-    elif not lymph_nodes.isdigit() or int(lymph_nodes) < 0:
-        st.warning("Lymph Nodes must be a non-negative number.")
+# ---- Buttons ----
+b1, b2 = st.columns(2)
+with b1:
+    reset = st.button("RESET")
+with b2:
+    predict = st.button("PREDICT")
+
+if reset:
+    for k in list(st.session_state.keys()):
+        del st.session_state[k]
+    st.experimental_rerun()
+
+# ---- Prediction ----
+if predict:
+    if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
+        st.error("Please fill out all fields before predicting.")
     else:
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
-        er = 1 if er_status == "Positive" else 0
-        pr = 1 if pr_status == "Positive" else 0
+        er = 1 if er == "Positive" else 0
+        pr = 1 if pr == "Positive" else 0
         her2_vals = [0, 0, 0, 0]
         her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
-        if her2_status in her2_opts:
-            her2_vals[her2_opts.index(her2_status)] = 1
-        chemo = 1 if chemotherapy == "Yes" else 0
-        radio = 1 if radiotherapy == "Yes" else 0
-        hormone = 1 if hormone_therapy == "Yes" else 0
+        if her2 in her2_opts:
+            her2_vals[her2_opts.index(her2)] = 1
+        chemo = 1 if chemo == "Yes" else 0
+        radio = 1 if radio == "Yes" else 0
+        hormone = 1 if hormone == "Yes" else 0
         surgery_conserve = 1 if surgery == "Breast-conserving" else 0
         surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
 
@@ -117,17 +120,60 @@ if predict_clicked:
         surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
         # Save
-        collection.insert_one({
+        record = {
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
             "survival_5yr": float(surv_5yr),
             "survival_10yr": float(surv_10yr)
-        })
+        }
+        collection.insert_one(record)
+        st.success("Patient record successfully saved!")
 
-        st.success("✅ Patient record successfully saved to MongoDB Atlas.")
+        # ---- White Container ----
+        with st.container():
+            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+            st.markdown("<h3 class='result-heading'>Survival Predictions</h3>", unsafe_allow_html=True)
+            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-        st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-        st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-        st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-        st.markdown("</div>", unsafe_allow_html=True)
+        # ---- Results Overview ----
+        st.markdown("<h3 class='section-title'>Results Overview</h3>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            fig, ax = plt.subplots()
+            ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+            for i, v in enumerate([surv_5yr, surv_10yr]):
+                ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+            ax.set_ylim(0, 1)
+            st.pyplot(fig)
+
+        with c2:
+            if surv_5yr < 0.5:
+                st.error("Low Survival Chance")
+                st.info("Patient shows low probability. Consider aggressive treatment planning.")
+            elif surv_5yr < 0.75:
+                st.warning("Moderate Survival Chance")
+                st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+            else:
+                st.success("High Survival Chance")
+                st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+
+        with c3:
+            fig2, ax2 = plt.subplots()
+            ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
+            ax2.set_title("Survival Curve")
+            ax2.set_xlabel("Time (Months)")
+            ax2.set_ylabel("Survival Probability")
+            st.pyplot(fig2)
+
+        # ---- PDF ----
+        pdf = BytesIO()
+        c = canvas.Canvas(pdf, pagesize=letter)
+        c.drawString(100, 750, f"Patient ID: {patient_id}")
+        c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
+        c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
+        c.save()
+        pdf.seek(0)
+
+        st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

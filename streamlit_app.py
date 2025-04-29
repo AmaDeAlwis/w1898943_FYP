@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Full RESET mechanism ---
+# --- Handle Reset via URL ---
 if st.query_params.get("reset") == "1":
     st.query_params.clear()
     st.session_state.clear()
@@ -24,7 +24,7 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Page Setup and Styling ---
+# --- Styling ---
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -47,7 +47,8 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
     background-color: white;
     padding: 1.5rem;
     border-radius: 10px;
-    margin-bottom: 1rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
     box-shadow: 0 0 5px rgba(0,0,0,0.1);
 }
 .stButton button {
@@ -61,7 +62,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Input Fields ---
+# --- Inputs ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -91,7 +92,7 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons ---
+# --- Buttons at Bottom ---
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     if st.button("RESET"):
@@ -99,7 +100,7 @@ with col_b1:
 with col_b2:
     predict = st.button("PREDICT")
 
-# --- Prediction Logic ---
+# --- Prediction ---
 if predict:
     required = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
     if "" in required:
@@ -138,15 +139,18 @@ if predict:
             "survival_10yr": float(surv_10yr)
         })
 
-        # --- Show success and results inside container ---
+        # ✅ Success Message BEFORE predictions
+        st.success("✅ Patient record successfully saved!")
+
+        # ✅ Survival Predictions inside White Container
         with st.container():
             st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.success("✅ Patient record successfully saved!")
             st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
             st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
             st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
             st.markdown("</div>", unsafe_allow_html=True)
 
+        # --- Results Overview ---
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1:

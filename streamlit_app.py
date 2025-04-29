@@ -28,7 +28,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1> Breast Cancer Survival Prediction (CoxPH) </h1>", unsafe_allow_html=True)
+st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
 # Patient ID
 patient_id = st.text_input("Patient ID (Required)")
@@ -43,9 +43,9 @@ if patient_id:
 st.markdown("<p class='section-title'>Enter Clinical Data</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
-    age = st.number_input("Age", min_value=20, max_value=100, step=1)
+    age = st.text_input("Age")
     lymph_nodes = st.number_input("Lymph Nodes Examined", min_value=0, step=1)
-    menopausal = st.selectbox("Menopausal Status", ["Pre-menopausal", "Post-menopausal"])
+    menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"])
     tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4])
     er = st.selectbox("ER Status", ["Positive", "Negative"])
     pr = st.selectbox("PR Status", ["Positive", "Negative"])
@@ -57,7 +57,23 @@ with col2:
     hormone = st.selectbox("Hormone Therapy", ["Yes", "No"])
     surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
 
-if st.button("Predict Survival"):
+# Create two columns
+col1, col2 = st.columns(2)
+
+# Place RESET button in left column
+with col1:
+    reset = st.button("RESET")
+
+# Place PREDICT button in right column
+with col2:
+    predict = st.button("PREDICT")
+
+# If RESET button is clicked ➔ clear all inputs
+if reset:
+    st.session_state.clear()
+
+# If PREDICT button is clicked ➔ perform prediction
+if predict:
     menopausal = 1 if menopausal == "Post-menopausal" else 0
     er = 1 if er == "Positive" else 0
     pr = 1 if pr == "Positive" else 0

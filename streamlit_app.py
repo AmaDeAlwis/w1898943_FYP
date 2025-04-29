@@ -13,7 +13,7 @@ from lifelines import CoxPHFitter
 if st.query_params.get("reset") == "1":
     st.query_params.clear()
     st.session_state.clear()
-    st.experimental_rerun()
+    st.rerun()
 
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
@@ -83,6 +83,22 @@ with col2:
     er = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er")
     pr = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr")
 
+# --- Inline Validation for Age and Lymph Nodes ---
+age_valid, nodes_valid = True, True
+try:
+    if age:
+        float(age)
+except ValueError:
+    age_valid = False
+    st.warning("⚠️ Please enter a valid numeric value for Age.")
+
+try:
+    if lymph_nodes:
+        float(lymph_nodes)
+except ValueError:
+    nodes_valid = False
+    st.warning("⚠️ Please enter a valid numeric value for Lymph Nodes Examined.")
+
 st.markdown("<div class='section-title'>Treatment Information</div>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
@@ -104,7 +120,9 @@ with col_b2:
 if predict:
     required = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
     if "" in required:
-        st.error("Please fill out all fields before predicting.")
+        st.error("❌ Please fill out all fields before predicting.")
+    elif not age_valid or not nodes_valid:
+        st.error("❌ Age and Lymph Node count must be valid numbers.")
     else:
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
         er = 1 if er == "Positive" else 0
@@ -139,10 +157,8 @@ if predict:
             "survival_10yr": float(surv_10yr)
         })
 
-        # ✅ Success Message BEFORE predictions
         st.success("✅ Patient record successfully saved!")
 
-        # ✅ Survival Predictions inside White Container
         with st.container():
             st.markdown("<div class='white-box'>", unsafe_allow_html=True)
             st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
@@ -150,7 +166,6 @@ if predict:
             st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
             st.markdown("</div>", unsafe_allow_html=True)
 
-        # --- Results Overview ---
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -180,7 +195,6 @@ if predict:
             ax2.set_ylabel("Survival Probability")
             st.pyplot(fig2)
 
-        # --- PDF Report ---
         pdf = BytesIO()
         c = canvas.Canvas(pdf, pagesize=letter)
         c.drawString(100, 750, f"Patient ID: {patient_id}")

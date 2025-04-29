@@ -18,7 +18,6 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# Page setup
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -29,10 +28,12 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
+st.markdown("""
+<h1> Breast Cancer Survival Prediction </h1>
+<p class='section-title'>Patient Information</p>
+""", unsafe_allow_html=True)
 
-# Section: Patient ID
-st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
+# Patient ID
 patient_id = st.text_input("Patient ID (Required)")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -41,59 +42,67 @@ if patient_id:
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
-# Section: Clinical Data
-st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
+# Clinical Data Section
+st.markdown("""
+<p class='section-title'>Clinical Information</p>
+""", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age")
     lymph_nodes = st.text_input("Lymph Nodes Examined")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"])
     tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4])
-    er = st.selectbox("ER Status", ["", "Positive", "Negative"])
-    pr = st.selectbox("PR Status", ["", "Positive", "Negative"])
+    er_status = st.selectbox("ER Status", ["", "Positive", "Negative"])
+    pr_status = st.selectbox("PR Status", ["", "Positive", "Negative"])
 
 with col2:
-    her2 = st.selectbox("HER2 Status", ["", "Gain", "Loss", "Neutral", "Undef"])
+    her2_status = st.selectbox("HER2 Status", ["", "Gain", "Loss", "Neutral", "Undef"])
 
-# Section: Treatment Info
-st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
+# Treatment Information Section
+st.markdown("""
+<p class='section-title'>Treatment Information</p>
+""", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
-    chemo = st.selectbox("Chemotherapy", ["", "Yes", "No"])
-    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
-with col4:
-    radio = st.selectbox("Radiotherapy", ["", "Yes", "No"])
-    hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
+    chemo_status = st.selectbox("Chemotherapy", ["", "Yes", "No"])
+    surgery_status = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
 
-# Action buttons
+with col4:
+    radio_status = st.selectbox("Radiotherapy", ["", "Yes", "No"])
+    hormone_status = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
+
+# Create two columns for Reset and Predict
 col5, col6 = st.columns(2)
 with col5:
     reset = st.button("RESET")
 with col6:
     predict = st.button("PREDICT")
 
-# RESET
+# RESET button clears session state
 if reset:
     st.session_state.clear()
 
-# PREDICT
+# PREDICT button
 if predict:
-    if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
+    # Validation
+    if "" in [age, lymph_nodes, menopausal_status, tumor_stage, er_status, pr_status, her2_status, chemo_status, radio_status, hormone_status, surgery_status]:
         st.error("❗ Please fill out all fields before predicting.")
     else:
+        # Convert categorical inputs to numerical features
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
-        er = 1 if er == "Positive" else 0
-        pr = 1 if pr == "Positive" else 0
+        er = 1 if er_status == "Positive" else 0
+        pr = 1 if pr_status == "Positive" else 0
         her2_vals = [0, 0, 0, 0]
         her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
-        if her2 in her2_opts:
-            her2_vals[her2_opts.index(her2)] = 1
-        chemo = 1 if chemo == "Yes" else 0
-        radio = 1 if radio == "Yes" else 0
-        hormone = 1 if hormone == "Yes" else 0
-        surgery_conserve = 1 if surgery == "Breast-conserving" else 0
-        surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+        if her2_status in her2_opts:
+            her2_vals[her2_opts.index(her2_status)] = 1
+        chemo = 1 if chemo_status == "Yes" else 0
+        radio = 1 if radio_status == "Yes" else 0
+        hormone = 1 if hormone_status == "Yes" else 0
+        surgery_conserve = 1 if surgery_status == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if surgery_status == "Mastectomy" else 0
 
+        # Assemble feature vector
         features = np.array([
             float(age), chemo, er, hormone, menopausal, float(lymph_nodes), pr, radio, int(tumor_stage),
             surgery_conserve, surgery_mastectomy, *her2_vals
@@ -102,6 +111,7 @@ if predict:
         features_scaled = scaler.transform(features)
         df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
 
+        # Predict survival
         surv_func = cox_model.predict_survival_function(df_input)
         times = surv_func.index.values
         surv_5yr = np.interp(60, times, surv_func.values.flatten())
@@ -111,6 +121,7 @@ if predict:
         st.metric("5-Year Survival Probability", f"{surv_5yr:.2f}")
         st.metric("10-Year Survival Probability", f"{surv_10yr:.2f}")
 
+        # Save to MongoDB
         record = {
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
@@ -119,11 +130,13 @@ if predict:
         }
         collection.insert_one(record)
 
+        # Plot bar chart
         fig, ax = plt.subplots()
         ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
         ax.set_ylim(0, 1)
         st.pyplot(fig)
 
+        # PDF download
         pdf = BytesIO()
         c = canvas.Canvas(pdf, pagesize=letter)
         c.drawString(100, 750, f"Patient ID: {patient_id}")

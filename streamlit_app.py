@@ -37,95 +37,97 @@ if patient_id:
     if prev:
         with st.expander("Previous Predictions"):
             for r in prev:
-                st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➜ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
+                st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
 # Input fields
 st.markdown("<p class='section-title'>Enter Clinical Data</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age")
-    lymph_nodes = st.number_input("Lymph Nodes Examined", min_value=0, step=1)
+    lymph_nodes = st.text_input("Lymph Nodes Examined")
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"])
-    tumor_stage = st.selectbox("Tumor Stage", [1, 2, 3, 4])
-    er = st.selectbox("ER Status", ["Positive", "Negative"])
-    pr = st.selectbox("PR Status", ["Positive", "Negative"])
+    tumor_stage = st.selectbox("Tumor Stage", ["", "1", "2", "3", "4"])
+    er = st.selectbox("ER Status", ["", "Positive", "Negative"])
+    pr = st.selectbox("PR Status", ["", "Positive", "Negative"])
 
 with col2:
-    her2 = st.selectbox("HER2 Status", ["Neutral", "Loss", "Gain", "Undef"])
-    chemo = st.selectbox("Chemotherapy", ["Yes", "No"])
-    radio = st.selectbox("Radiotherapy", ["Yes", "No"])
-    hormone = st.selectbox("Hormone Therapy", ["Yes", "No"])
-    surgery = st.selectbox("Surgery Type", ["Breast-conserving", "Mastectomy"])
+    her2 = st.selectbox("HER2 Status", ["", "Gain", "Loss", "Neutral", "Undef"])
+    chemo = st.selectbox("Chemotherapy", ["", "Yes", "No"])
+    radio = st.selectbox("Radiotherapy", ["", "Yes", "No"])
+    hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
+    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
 
 # Create two columns
 col1, col2 = st.columns(2)
-
-# Place RESET button in left column
 with col1:
     reset = st.button("RESET")
-
-# Place PREDICT button in right column
 with col2:
     predict = st.button("PREDICT")
 
-# If RESET button is clicked ➔ clear all inputs
+# RESET button clears session state
 if reset:
     st.session_state.clear()
 
-# If PREDICT button is clicked ➔ perform prediction
+# PREDICT button
 if predict:
-    menopausal = 1 if menopausal == "Post-menopausal" else 0
-    er = 1 if er == "Positive" else 0
-    pr = 1 if pr == "Positive" else 0
-    her2_vals = [0, 0, 0, 0]
-    her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
-    if her2 in her2_opts:
-        her2_vals[her2_opts.index(her2)] = 1
-    chemo = 1 if chemo == "Yes" else 0
-    radio = 1 if radio == "Yes" else 0
-    hormone = 1 if hormone == "Yes" else 0
-    surgery_conserve = 1 if surgery == "Breast-conserving" else 0
-    surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+    # Validation
+    if "" in [menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage, age, lymph_nodes]:
+        st.error("❗ Please fill out all fields before predicting.")
+    else:
+        # Convert to numerical values
+        menopausal = 1 if menopausal_status == "Post-menopausal" else 0
+        er = 1 if er == "Positive" else 0
+        pr = 1 if pr == "Positive" else 0
+        her2_vals = [0, 0, 0, 0]
+        her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
+        if her2 in her2_opts:
+            her2_vals[her2_opts.index(her2)] = 1
+        chemo = 1 if chemo == "Yes" else 0
+        radio = 1 if radio == "Yes" else 0
+        hormone = 1 if hormone == "Yes" else 0
+        surgery_conserve = 1 if surgery == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
 
-    features = np.array([
-        age, chemo, er, hormone, menopausal, lymph_nodes, pr, radio, tumor_stage,
-        surgery_conserve, surgery_mastectomy, *her2_vals
-    ]).reshape(1, -1)
+        features = np.array([
+            float(age), chemo, er, hormone, menopausal, float(lymph_nodes), pr, radio, int(tumor_stage),
+            surgery_conserve, surgery_mastectomy, *her2_vals
+        ]).reshape(1, -1)
 
-    features_scaled = scaler.transform(features)
-    df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
+        features_scaled = scaler.transform(features)
+        df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
 
-    surv_func = cox_model.predict_survival_function(df_input)
-    times = surv_func.index.values
-    surv_5yr = np.interp(60, times, surv_func.values.flatten())
-    surv_10yr = np.interp(120, times, surv_func.values.flatten())
+        # Predict
+        surv_func = cox_model.predict_survival_function(df_input)
+        times = surv_func.index.values
+        surv_5yr = np.interp(60, times, surv_func.values.flatten())
+        surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
-    st.success("Prediction complete!")
-    st.metric("5-Year Survival Probability", f"{surv_5yr:.2f}")
-    st.metric("10-Year Survival Probability", f"{surv_10yr:.2f}")
+        st.success("Prediction complete!")
+        st.metric("5-Year Survival Probability", f"{surv_5yr:.2f}")
+        st.metric("10-Year Survival Probability", f"{surv_10yr:.2f}")
 
-    # Save to MongoDB
-    record = {
-        "patient_id": patient_id,
-        "timestamp": pd.Timestamp.now(),
-        "survival_5yr": float(surv_5yr),
-        "survival_10yr": float(surv_10yr)
-    }
-    collection.insert_one(record)
+        # Save to MongoDB
+        record = {
+            "patient_id": patient_id,
+            "timestamp": pd.Timestamp.now(),
+            "survival_5yr": float(surv_5yr),
+            "survival_10yr": float(surv_10yr)
+        }
+        collection.insert_one(record)
 
-    # Plot bar chart
-    fig, ax = plt.subplots()
-    ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
-    ax.set_ylim(0, 1)
-    st.pyplot(fig)
+        # Plot bar chart
+        fig, ax = plt.subplots()
+        ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+        ax.set_ylim(0, 1)
+        st.pyplot(fig)
 
-    # PDF download
-    pdf = BytesIO()
-    c = canvas.Canvas(pdf, pagesize=letter)
-    c.drawString(100, 750, f"Patient ID: {patient_id}")
-    c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
-    c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
-    c.save()
-    pdf.seek(0)
+        # PDF download
+        pdf = BytesIO()
+        c = canvas.Canvas(pdf, pagesize=letter)
+        c.drawString(100, 750, f"Patient ID: {patient_id}")
+        c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
+        c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
+        c.save()
+        pdf.seek(0)
 
-    st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")
+        st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

@@ -9,20 +9,22 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Initialize predicted flag ---
+# ----------------------- Initialize Flags -----------------------
+if "reset_requested" not in st.session_state:
+    st.session_state.reset_requested = False
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
-# --- Load model and scaler ---
+# ----------------------- Load Model & Scaler -----------------------
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB connection ---
+# ----------------------- MongoDB Setup -----------------------
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Styling ---
+# ----------------------- Page Styling -----------------------
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -36,7 +38,19 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Patient ID ---
+# ----------------------- Safe Reset if Requested -----------------------
+if st.session_state.reset_requested:
+    reset_keys = {
+        "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
+        "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "",
+        "radio": "", "hormone": ""
+    }
+    for k, v in reset_keys.items():
+        st.session_state[k] = v
+    st.session_state.predicted = False
+    st.session_state.reset_requested = False
+
+# ----------------------- Input Fields -----------------------
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -45,7 +59,6 @@ if patient_id:
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
-# --- Input Columns ---
 st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
@@ -80,21 +93,19 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons ---
+# ----------------------- Buttons -----------------------
 b1, b2 = st.columns(2)
 with b1:
     reset = st.button("RESET")
 with b2:
     predict = st.button("PREDICT")
 
-# --- Reset logic (instant clearing) ---
+# ----------------------- Reset Logic -----------------------
 if reset:
-    for key in ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]:
-        if key in st.session_state:
-            st.session_state[key] = ""
-    st.session_state.predicted = False
+    st.session_state.reset_requested = True
+    st.experimental_rerun()
 
-# --- Prediction logic ---
+# ----------------------- Prediction Logic -----------------------
 if predict:
     if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
         st.error("Please fill out all fields before predicting.")
@@ -125,7 +136,7 @@ if predict:
         surv_5yr = np.interp(60, times, surv_func.values.flatten())
         surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
-        # Save
+        # Save prediction results
         record = {
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
@@ -133,16 +144,16 @@ if predict:
             "survival_10yr": float(surv_10yr)
         }
         collection.insert_one(record)
-        st.success("Patient record successfully saved!")
 
-        # Save prediction results to session
+        # Set prediction state
         st.session_state.predicted = True
         st.session_state.surv_5yr = surv_5yr
         st.session_state.surv_10yr = surv_10yr
         st.session_state.times = times
         st.session_state.surv_func = surv_func
+        st.success("Patient record successfully saved!")
 
-# --- Show results only if predicted ---
+# ----------------------- Show Prediction Results -----------------------
 if st.session_state.predicted:
     with st.container():
         st.markdown("<div class='white-box'>", unsafe_allow_html=True)
@@ -180,7 +191,7 @@ if st.session_state.predicted:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # --- PDF Download ---
+    # PDF Download
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")

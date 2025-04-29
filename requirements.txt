@@ -7,6 +7,4 @@ scikit-learn
 lifelines
 scikit-survival
 joblib
-torch
-torch-geometric
 reportlab

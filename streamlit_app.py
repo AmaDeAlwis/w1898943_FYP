@@ -9,9 +9,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Initialize Reset Flag ---
+# --- Initialize Flags ---
 if "reset" not in st.session_state:
     st.session_state.reset = False
+if "predicted" not in st.session_state:
+    st.session_state.predicted = False
 
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
@@ -36,11 +38,11 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Handle reset safely BEFORE rendering inputs ---
+# --- Safe Reset (before displaying inputs) ---
 if st.session_state.reset:
     for key in ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]:
-        if key in st.session_state:
-            st.session_state[key] = ""
+        st.session_state[key] = ""
+    st.session_state.predicted = False  # Clear any predictions too
     st.session_state.reset = False
 
 # --- Patient ID ---
@@ -139,51 +141,59 @@ if predict:
         collection.insert_one(record)
         st.success("Patient record successfully saved!")
 
-        # --- White container ---
-        with st.container():
-            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.markdown("<h3 class='result-heading'>Survival Predictions</h3>", unsafe_allow_html=True)
-            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-            st.markdown("</div>", unsafe_allow_html=True)
+        # Set prediction flag
+        st.session_state.predicted = True
+        st.session_state.surv_5yr = surv_5yr
+        st.session_state.surv_10yr = surv_10yr
+        st.session_state.times = times
+        st.session_state.surv_func = surv_func
 
-        # --- Results Overview ---
-        st.markdown("<h3 class='section-title'>Results Overview</h3>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            fig, ax = plt.subplots()
-            ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
-            for i, v in enumerate([surv_5yr, surv_10yr]):
-                ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-            ax.set_ylim(0, 1)
-            st.pyplot(fig)
+# --- Show results only if predicted ---
+if st.session_state.predicted:
+    with st.container():
+        st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+        st.markdown("<h3 class='result-heading'>Survival Predictions</h3>", unsafe_allow_html=True)
+        st.write(f"**5-Year Survival Probability:** {st.session_state.surv_5yr:.2f} ({st.session_state.surv_5yr * 100:.0f}%)")
+        st.write(f"**10-Year Survival Probability:** {st.session_state.surv_10yr:.2f} ({st.session_state.surv_10yr * 100:.0f}%)")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        with c2:
-            if surv_5yr < 0.5:
-                st.error("Low Survival Chance")
-                st.info("Patient shows low probability. Consider aggressive treatment planning.")
-            elif surv_5yr < 0.75:
-                st.warning("Moderate Survival Chance")
-                st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
-            else:
-                st.success("High Survival Chance")
-                st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+    # --- Results Overview ---
+    st.markdown("<h3 class='section-title'>Results Overview</h3>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        fig, ax = plt.subplots()
+        ax.bar(["5-Year", "10-Year"], [st.session_state.surv_5yr, st.session_state.surv_10yr], color="#FF69B4")
+        for i, v in enumerate([st.session_state.surv_5yr, st.session_state.surv_10yr]):
+            ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+        ax.set_ylim(0, 1)
+        st.pyplot(fig)
 
-        with c3:
-            fig2, ax2 = plt.subplots()
-            ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
-            ax2.set_title("Survival Curve")
-            ax2.set_xlabel("Time (Months)")
-            ax2.set_ylabel("Survival Probability")
-            st.pyplot(fig2)
+    with c2:
+        if st.session_state.surv_5yr < 0.5:
+            st.error("Low Survival Chance")
+            st.info("Patient shows low probability. Consider aggressive treatment planning.")
+        elif st.session_state.surv_5yr < 0.75:
+            st.warning("Moderate Survival Chance")
+            st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+        else:
+            st.success("High Survival Chance")
+            st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
 
-        # --- PDF Download ---
-        pdf = BytesIO()
-        c = canvas.Canvas(pdf, pagesize=letter)
-        c.drawString(100, 750, f"Patient ID: {patient_id}")
-        c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
-        c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
-        c.save()
-        pdf.seek(0)
+    with c3:
+        fig2, ax2 = plt.subplots()
+        ax2.plot(st.session_state.times, st.session_state.surv_func.values.flatten(), color="#c2185b")
+        ax2.set_title("Survival Curve")
+        ax2.set_xlabel("Time (Months)")
+        ax2.set_ylabel("Survival Probability")
+        st.pyplot(fig2)
 
-        st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")
+    # --- PDF Download ---
+    pdf = BytesIO()
+    c = canvas.Canvas(pdf, pagesize=letter)
+    c.drawString(100, 750, f"Patient ID: {patient_id}")
+    c.drawString(100, 730, f"5-Year Survival: {st.session_state.surv_5yr:.2f}")
+    c.drawString(100, 710, f"10-Year Survival: {st.session_state.surv_10yr:.2f}")
+    c.save()
+    pdf.seek(0)
+
+    st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

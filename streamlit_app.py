@@ -9,9 +9,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Page Setup & Styling ---
+# Set page config
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
-st.markdown("""
+
+# --- CSS Styling ---
+st.markdown('''
 <style>
 h1 { color: #ad1457; text-align: center; font-weight: bold; }
 .section-title {
@@ -42,16 +44,9 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
     font-weight: bold;
 }
 </style>
-""", unsafe_allow_html=True)
+''', unsafe_allow_html=True)
 
-# --- Reset Function ---
-def reset_form():
-    for key in st.session_state.keys():
-        st.session_state[key] = ""
-    st.session_state.clear()
-    st.experimental_rerun()
-
-# --- Load model & scaler ---
+# --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
@@ -60,10 +55,11 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
+# --- Page Title ---
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Form ---
-with st.form("input_form", clear_on_submit=False):
+# --- Form Inputs ---
+with st.form("prediction_form", clear_on_submit=False):
     patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 
     st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
@@ -93,13 +89,15 @@ with st.form("input_form", clear_on_submit=False):
     with col_btn2:
         predict_clicked = st.form_submit_button("PREDICT")
 
+# --- Reset Logic ---
 if reset_clicked:
-    reset_form()
+    st.session_state.clear()
+    st.experimental_rerun()
 
-# --- Prediction ---
+# --- Prediction Logic ---
 if predict_clicked:
-    required = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
-    if "" in required:
+    fields = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
+    if "" in fields:
         st.error("Please fill out all fields before predicting.")
     else:
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
@@ -128,7 +126,7 @@ if predict_clicked:
         surv_5yr = np.interp(60, times, surv_func.values.flatten())
         surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
-        # Save to MongoDB
+        # Save record
         collection.insert_one({
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
@@ -136,16 +134,17 @@ if predict_clicked:
             "survival_10yr": float(surv_10yr)
         })
 
-        # Show inside white container
-        with st.container():
-            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.success("✅ Patient record successfully saved!")
-            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-            st.markdown("</div>", unsafe_allow_html=True)
+        # ✅ Success message (outside container)
+        st.success("✅ Patient record successfully saved!")
 
-        # Results Overview
+        # ✅ Predictions inside white box
+        st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+        st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+        st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+        st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        # --- Results Overview ---
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -162,10 +161,10 @@ if predict_clicked:
                 st.info("Consider aggressive treatment.")
             elif surv_5yr < 0.75:
                 st.warning("Moderate Survival Chance")
-                st.info("Monitor closely and adjust treatments.")
+                st.info("Monitor and adjust care plans.")
             else:
                 st.success("High Survival Chance")
-                st.info("Continue regular monitoring.")
+                st.info("Maintain regular follow-ups.")
 
         with c3:
             fig2, ax2 = plt.subplots()

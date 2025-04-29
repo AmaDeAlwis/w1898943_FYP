@@ -11,7 +11,6 @@ from lifelines import CoxPHFitter
 
 # --- SAFE RESET before widget rendering ---
 if st.session_state.get("reset_now", False):
-    # Only rerun if session was initialized (avoids crash)
     if any(k in st.session_state for k in ["age", "nodes", "patient_id"]):
         for key in [
             "patient_id", "age", "nodes", "meno", "stage",
@@ -22,15 +21,12 @@ if st.session_state.get("reset_now", False):
         st.session_state.reset_now = False
         st.experimental_rerun()
 
-# --- INITIAL SESSION STATE ---
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
-# --- Load model & scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB connection ---
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
@@ -40,10 +36,33 @@ st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
 h1 { color: #ad1457; text-align: center; font-weight: bold; }
-.section-title { font-size: 22px; font-weight: bold; color: #ad1457; margin-top: 2rem; margin-bottom: 1rem; }
-.stButton button { background-color: #ad1457 !important; color: white !important; border-radius: 10px; font-weight: bold; }
-.result-heading { font-size: 22px; color: #ad1457; font-weight: bold; margin-top: 1rem; margin-bottom: 0.5rem; }
-.white-box { background-color: white; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; }
+.section-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ad1457;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+.result-heading {
+    font-size: 22px;
+    color: #ad1457;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+.white-box {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+.stButton button {
+    background-color: #ad1457 !important;
+    color: white !important;
+    border-radius: 10px;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -58,7 +77,7 @@ if patient_id:
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
-st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", key="age")
@@ -70,7 +89,7 @@ with col2:
     er = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er")
     pr = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr")
 
-st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
+st.markdown("<div class='section-title'>Treatment Information</div>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
 with col3:
     chemo = st.selectbox("Chemotherapy", ["", "Yes", "No"], key="chemo")
@@ -79,7 +98,7 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at the Bottom ---
+# --- Buttons at Bottom ---
 b1, b2 = st.columns(2)
 with b1:
     if st.button("RESET"):
@@ -135,13 +154,14 @@ if predict:
 
 # --- Results Display ---
 if st.session_state.get("predicted", False):
-    st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-    st.markdown("<h3 class='result-heading'>Survival Predictions</h3>", unsafe_allow_html=True)
-    st.write(f"**5-Year Survival Probability:** {st.session_state.surv_5yr:.2f} ({st.session_state.surv_5yr * 100:.0f}%)")
-    st.write(f"**10-Year Survival Probability:** {st.session_state.surv_10yr:.2f} ({st.session_state.surv_10yr * 100:.0f}%)")
-    st.markdown("</div>", unsafe_allow_html=True)
+    with st.container():
+        st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+        st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+        st.write(f"**5-Year Survival Probability:** {st.session_state.surv_5yr:.2f} ({st.session_state.surv_5yr * 100:.0f}%)")
+        st.write(f"**10-Year Survival Probability:** {st.session_state.surv_10yr:.2f} ({st.session_state.surv_10yr * 100:.0f}%)")
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown("<h3 class='section-title'>Results Overview</h3>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
         fig, ax = plt.subplots()
@@ -170,7 +190,6 @@ if st.session_state.get("predicted", False):
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF Report
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")

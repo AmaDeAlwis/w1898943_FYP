@@ -9,12 +9,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Handle Reset via URL ---
-if st.query_params.get("reset") == "1":
-    st.query_params.clear()
-    st.session_state.clear()
-    st.rerun()
-
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
@@ -62,6 +56,13 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
+# --- Reset Button Logic ---
+col_b1, col_b2 = st.columns(2)
+with col_b1:
+    if st.button("RESET"):
+        st.session_state.clear()
+        st.rerun()
+
 # --- Inputs ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
@@ -74,7 +75,6 @@ if patient_id:
 st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 
-# --- Column 1 with field-level validation ---
 with col1:
     age = st.text_input("Age", key="age")
     age_valid = True
@@ -103,7 +103,6 @@ with col1:
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="meno")
     tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="stage")
 
-# --- Column 2 ---
 with col2:
     her2 = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2")
     er = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er")
@@ -118,15 +117,11 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at Bottom ---
-col_b1, col_b2 = st.columns(2)
-with col_b1:
-    if st.button("RESET"):
-        st.query_params["reset"] = "1"
+# --- Predict Button ---
 with col_b2:
     predict = st.button("PREDICT")
 
-# --- Prediction ---
+# --- Prediction Logic ---
 if predict:
     required = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
     if "" in required:

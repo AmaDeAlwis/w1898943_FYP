@@ -9,13 +9,14 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Reset before rendering ---
-if st.query_params.get("reset") == "1":
-    st.query_params.clear()
-    st.session_state.clear()
+# --- Reset Logic ---
+if "reset_now" in st.session_state and st.session_state.reset_now:
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.session_state.reset_now = False
     st.experimental_rerun()
 
-# --- Load model and scaler ---
+# --- Load model & scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
@@ -24,7 +25,7 @@ client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Styling ---
+# --- UI Styling ---
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -91,11 +92,11 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at the Bottom ---
+# --- Buttons at Bottom ---
 col_btn1, col_btn2 = st.columns(2)
 with col_btn1:
     if st.button("RESET"):
-        st.query_params["reset"] = "1"
+        st.session_state.reset_now = True
 with col_btn2:
     predict = st.button("PREDICT")
 
@@ -138,7 +139,7 @@ if predict:
             "survival_10yr": float(surv_10yr)
         })
 
-        # --- Show Results ---
+        # --- Results Container ---
         with st.container():
             st.markdown("<div class='white-box'>", unsafe_allow_html=True)
             st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)

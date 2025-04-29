@@ -73,41 +73,41 @@ if patient_id:
 
 st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
+
+# --- Column 1 with field-level validation ---
 with col1:
     age = st.text_input("Age", key="age")
+    age_valid = True
+    if age:
+        try:
+            age_val = float(age)
+            if age_val < 20:
+                age_valid = False
+                st.markdown("<p style='color: #d6336c;'>⚠️ Age must be at least 20.</p>", unsafe_allow_html=True)
+        except ValueError:
+            age_valid = False
+            st.markdown("<p style='color: #d6336c;'>⚠️ Age must be a valid number.</p>", unsafe_allow_html=True)
+
     lymph_nodes = st.text_input("Lymph Nodes Examined", key="nodes")
+    nodes_valid = True
+    if lymph_nodes:
+        try:
+            nodes_val = float(lymph_nodes)
+            if nodes_val < 0:
+                nodes_valid = False
+                st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
+        except ValueError:
+            nodes_valid = False
+            st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
+
     menopausal_status = st.selectbox("Menopausal Status", ["", "Pre-menopausal", "Post-menopausal"], key="meno")
     tumor_stage = st.selectbox("Tumor Stage", ["", 1, 2, 3, 4], key="stage")
+
+# --- Column 2 ---
 with col2:
     her2 = st.selectbox("HER2 Status", ["", "Neutral", "Loss", "Gain", "Undef"], key="her2")
     er = st.selectbox("ER Status", ["", "Positive", "Negative"], key="er")
     pr = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr")
-
-# --- Inline Validation for Age and Lymph Nodes ---
-# --- Inline Validation for Age ---
-age_valid = True
-if age:
-    try:
-        age_val = float(age)
-        if age_val < 20:
-            age_valid = False
-            st.warning("⚠️ Age must be at least 20.")
-    except ValueError:
-        age_valid = False
-        st.warning("⚠️ Age must be a valid numeric value.")
-
-# --- Inline Validation for Lymph Nodes ---
-nodes_valid = True
-if lymph_nodes:
-    try:
-        nodes_val = float(lymph_nodes)
-        if nodes_val < 0:
-            nodes_valid = False
-            st.warning("⚠️ Lymph Nodes must be 0 or greater.")
-    except ValueError:
-        nodes_valid = False
-        st.warning("⚠️ Lymph Nodes must be a valid numeric value.")
-
 
 st.markdown("<div class='section-title'>Treatment Information</div>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)
@@ -132,7 +132,7 @@ if predict:
     if "" in required:
         st.error("❌ Please fill out all fields before predicting.")
     elif not age_valid or not nodes_valid:
-        st.error("❌ Age and Lymph Node count must be valid numbers.")
+        st.error("❌ Age and Lymph Node values must be valid and within accepted ranges.")
     else:
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
         er = 1 if er == "Positive" else 0

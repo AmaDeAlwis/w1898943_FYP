@@ -9,23 +9,22 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Reset Logic ---
-if "reset_now" in st.session_state and st.session_state.reset_now:
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
-    st.session_state.reset_now = False
+# --- Reset mechanism ---
+if st.query_params.get("reset") == "1":
+    st.query_params.clear()
+    st.session_state.clear()
     st.experimental_rerun()
 
-# --- Load model & scaler ---
+# --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB Connection ---
+# --- MongoDB connection ---
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- UI Styling ---
+# --- Page Setup and Styling ---
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -62,7 +61,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Input Fields ---
+# --- Inputs ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -92,12 +91,12 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at Bottom ---
-col_btn1, col_btn2 = st.columns(2)
-with col_btn1:
+# --- Buttons ---
+b1, b2 = st.columns(2)
+with b1:
     if st.button("RESET"):
-        st.session_state.reset_now = True
-with col_btn2:
+        st.query_params["reset"] = "1"
+with b2:
     predict = st.button("PREDICT")
 
 # --- Prediction Logic ---
@@ -145,8 +144,10 @@ if predict:
             st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
             st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
             st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+            st.success("Patient record successfully saved!")
             st.markdown("</div>", unsafe_allow_html=True)
 
+        # --- Results Overview ---
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
         with c1:
@@ -176,7 +177,7 @@ if predict:
             ax2.set_ylabel("Survival Probability")
             st.pyplot(fig2)
 
-        # PDF Report
+        # --- PDF Report ---
         pdf = BytesIO()
         c = canvas.Canvas(pdf, pagesize=letter)
         c.drawString(100, 750, f"Patient ID: {patient_id}")

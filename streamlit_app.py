@@ -9,10 +9,6 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Initialize Reset Flag ---
-if "reset_flag" not in st.session_state:
-    st.session_state.reset_flag = False
-
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
@@ -35,22 +31,6 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
-
-# --- Clear fields if Reset Flag is set ---
-if st.session_state.reset_flag:
-    st.session_state["patient_id"] = ""
-    st.session_state["age"] = ""
-    st.session_state["nodes"] = ""
-    st.session_state["meno"] = ""
-    st.session_state["stage"] = ""
-    st.session_state["her2"] = ""
-    st.session_state["er"] = ""
-    st.session_state["pr"] = ""
-    st.session_state["chemo"] = ""
-    st.session_state["surgery"] = ""
-    st.session_state["radio"] = ""
-    st.session_state["hormone"] = ""
-    st.session_state.reset_flag = False
 
 # --- Patient ID ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
@@ -105,8 +85,18 @@ with b2:
 
 # --- Reset logic ---
 if reset:
-    st.session_state.reset_flag = True
-    st.experimental_rerun()
+    st.session_state["patient_id"] = ""
+    st.session_state["age"] = ""
+    st.session_state["nodes"] = ""
+    st.session_state["meno"] = ""
+    st.session_state["stage"] = ""
+    st.session_state["her2"] = ""
+    st.session_state["er"] = ""
+    st.session_state["pr"] = ""
+    st.session_state["chemo"] = ""
+    st.session_state["surgery"] = ""
+    st.session_state["radio"] = ""
+    st.session_state["hormone"] = ""
 
 # --- Prediction logic ---
 if predict:

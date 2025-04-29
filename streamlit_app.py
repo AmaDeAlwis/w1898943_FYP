@@ -9,34 +9,33 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# ------------------- Flags -------------------
+# ------------------- Initialization -------------------
 if "reset_now" not in st.session_state:
     st.session_state.reset_now = False
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
-# ------------------- Safe Reset on First Click -------------------
-if st.session_state.get("reset_now", False):
-    st.session_state["reset_now"] = False  # Clear the reset flag immediately
+# ------------------- Apply Reset Before Widgets -------------------
+if st.session_state.reset_now:
     reset_defaults = {
         "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
         "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "", "radio": "", "hormone": ""
     }
-    for key, default_val in reset_defaults.items():
-        if key in st.session_state:
-            st.session_state[key] = default_val
+    for k, v in reset_defaults.items():
+        st.session_state[k] = v
     st.session_state.predicted = False
+    st.session_state.reset_now = False
 
-# ------------------- Load Model & Scaler -------------------
+# ------------------- Load model & scaler -------------------
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# ------------------- MongoDB Setup -------------------
+# ------------------- MongoDB -------------------
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# ------------------- Page Styling -------------------
+# ------------------- Page Config & CSS -------------------
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -50,7 +49,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# ------------------- Input Fields -------------------
+# ------------------- Inputs -------------------
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -98,6 +97,7 @@ b1, b2 = st.columns(2)
 with b1:
     if st.button("RESET"):
         st.session_state.reset_now = True
+        st.experimental_rerun()
 with b2:
     predict = st.button("PREDICT")
 
@@ -183,7 +183,7 @@ if st.session_state.predicted:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF Report
+    # PDF Download
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")

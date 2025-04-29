@@ -84,20 +84,30 @@ with col2:
     pr = st.selectbox("PR Status", ["", "Positive", "Negative"], key="pr")
 
 # --- Inline Validation for Age and Lymph Nodes ---
-age_valid, nodes_valid = True, True
-try:
-    if age:
-        float(age)
-except ValueError:
-    age_valid = False
-    st.warning("⚠️ Please enter a valid numeric value for Age.")
+# --- Inline Validation for Age ---
+age_valid = True
+if age:
+    try:
+        age_val = float(age)
+        if age_val < 20:
+            age_valid = False
+            st.warning("⚠️ Age must be at least 20.")
+    except ValueError:
+        age_valid = False
+        st.warning("⚠️ Age must be a valid numeric value.")
 
-try:
-    if lymph_nodes:
-        float(lymph_nodes)
-except ValueError:
-    nodes_valid = False
-    st.warning("⚠️ Please enter a valid numeric value for Lymph Nodes Examined.")
+# --- Inline Validation for Lymph Nodes ---
+nodes_valid = True
+if lymph_nodes:
+    try:
+        nodes_val = float(lymph_nodes)
+        if nodes_val < 0:
+            nodes_valid = False
+            st.warning("⚠️ Lymph Nodes must be 0 or greater.")
+    except ValueError:
+        nodes_valid = False
+        st.warning("⚠️ Lymph Nodes must be a valid numeric value.")
+
 
 st.markdown("<div class='section-title'>Treatment Information</div>", unsafe_allow_html=True)
 col3, col4 = st.columns(2)

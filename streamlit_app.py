@@ -9,9 +9,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Initialize Flags ---
-if "reset" not in st.session_state:
-    st.session_state.reset = False
+# --- Initialize predicted flag ---
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
@@ -37,13 +35,6 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
-
-# --- Safe Reset (before displaying inputs) ---
-if st.session_state.reset:
-    for key in ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]:
-        st.session_state[key] = ""
-    st.session_state.predicted = False  # Clear any predictions too
-    st.session_state.reset = False
 
 # --- Patient ID ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
@@ -96,9 +87,12 @@ with b1:
 with b2:
     predict = st.button("PREDICT")
 
-# --- Reset logic ---
+# --- Reset logic (instant clearing) ---
 if reset:
-    st.session_state.reset = True
+    for key in ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]:
+        if key in st.session_state:
+            st.session_state[key] = ""
+    st.session_state.predicted = False
 
 # --- Prediction logic ---
 if predict:
@@ -141,7 +135,7 @@ if predict:
         collection.insert_one(record)
         st.success("Patient record successfully saved!")
 
-        # Set prediction flag
+        # Save prediction results to session
         st.session_state.predicted = True
         st.session_state.surv_5yr = surv_5yr
         st.session_state.surv_10yr = surv_10yr
@@ -157,7 +151,6 @@ if st.session_state.predicted:
         st.write(f"**10-Year Survival Probability:** {st.session_state.surv_10yr:.2f} ({st.session_state.surv_10yr * 100:.0f}%)")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- Results Overview ---
     st.markdown("<h3 class='section-title'>Results Overview</h3>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:

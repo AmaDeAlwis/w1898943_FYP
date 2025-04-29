@@ -83,8 +83,8 @@ with b1:
 with b2:
     predict = st.button("PREDICT")
 
+# --- Safe RESET Logic ---
 if reset:
-    # Safe Reset: clear only app variables, not critical Streamlit internals
     keys_to_clear = [
         "patient_id", "age", "nodes", "meno", "stage",
         "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"

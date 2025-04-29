@@ -31,6 +31,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 st.markdown("<h1> Breast Cancer Survival Prediction </h1>", unsafe_allow_html=True)
 
 # Patient ID
+st.markdown("<p class='section-title'>Patient Information</p>", unsafe_allow_html=True)
 patient_id = st.text_input("Patient ID (Required)")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -40,7 +41,7 @@ if patient_id:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
 # Input fields
-st.markdown("<p class='section-title'>Enter Clinical Data</p>", unsafe_allow_html=True)
+st.markdown("<p class='section-title'>Clinical Information</p>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age")
@@ -56,6 +57,15 @@ with col2:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"])
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
     surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
+
+st.markdown("<p class='section-title'>Treatment Information</p>", unsafe_allow_html=True)
+col3, col4 = st.columns(2)
+with col3:
+    chemo = st.selectbox("Chemotherapy", ["", "Yes", "No"])
+    surgery = st.selectbox("Surgery Type", ["", "Breast-conserving", "Mastectomy"])
+with col4:
+    radio = st.selectbox("Radiotherapy", ["", "Yes", "No"])
+    hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"])
 
 # Create two columns
 col1, col2 = st.columns(2)

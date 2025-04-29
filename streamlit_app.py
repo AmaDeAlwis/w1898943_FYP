@@ -10,21 +10,8 @@ from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
 # ------------------- Initialization -------------------
-if "reset_now" not in st.session_state:
-    st.session_state.reset_now = False
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
-
-# ------------------- Apply Reset Before Widgets -------------------
-if st.session_state.reset_now:
-    reset_defaults = {
-        "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
-        "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "", "radio": "", "hormone": ""
-    }
-    for k, v in reset_defaults.items():
-        st.session_state[k] = v
-    st.session_state.predicted = False
-    st.session_state.reset_now = False
 
 # ------------------- Load model & scaler -------------------
 cox_model = joblib.load(".streamlit/cox_model.pkl")
@@ -49,7 +36,22 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# ------------------- Inputs -------------------
+# ------------------- Buttons Top -------------------
+b1, b2 = st.columns(2)
+with b1:
+    if st.button("RESET"):
+        for key in [
+            "patient_id", "age", "nodes", "meno", "stage",
+            "her2", "er", "pr", "chemo", "surgery", "radio", "hormone",
+            "surv_5yr", "surv_10yr", "times", "surv_func", "predicted"
+        ]:
+            if key in st.session_state:
+                del st.session_state[key]
+        st.success("Form cleared successfully.")
+with b2:
+    predict = st.button("PREDICT")
+
+# ------------------- Input Fields -------------------
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -91,15 +93,6 @@ with col3:
 with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
-
-# ------------------- Buttons -------------------
-b1, b2 = st.columns(2)
-with b1:
-    if st.button("RESET"):
-        st.session_state.reset_now = True
-        st.experimental_rerun()
-with b2:
-    predict = st.button("PREDICT")
 
 # ------------------- Prediction -------------------
 if predict:
@@ -183,7 +176,7 @@ if st.session_state.predicted:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF Download
+    # PDF Report
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")
@@ -191,5 +184,4 @@ if st.session_state.predicted:
     c.drawString(100, 710, f"10-Year Survival: {st.session_state.surv_10yr:.2f}")
     c.save()
     pdf.seek(0)
-
     st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

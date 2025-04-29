@@ -38,18 +38,18 @@ st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True
 
 # --- Clear fields if Reset Flag is set ---
 if st.session_state.reset_flag:
-    st.session_state.patient_id = ""
-    st.session_state.age = ""
-    st.session_state.nodes = ""
-    st.session_state.meno = ""
-    st.session_state.stage = ""
-    st.session_state.her2 = ""
-    st.session_state.er = ""
-    st.session_state.pr = ""
-    st.session_state.chemo = ""
-    st.session_state.surgery = ""
-    st.session_state.radio = ""
-    st.session_state.hormone = ""
+    st.session_state["patient_id"] = ""
+    st.session_state["age"] = ""
+    st.session_state["nodes"] = ""
+    st.session_state["meno"] = ""
+    st.session_state["stage"] = ""
+    st.session_state["her2"] = ""
+    st.session_state["er"] = ""
+    st.session_state["pr"] = ""
+    st.session_state["chemo"] = ""
+    st.session_state["surgery"] = ""
+    st.session_state["radio"] = ""
+    st.session_state["hormone"] = ""
     st.session_state.reset_flag = False
 
 # --- Patient ID ---

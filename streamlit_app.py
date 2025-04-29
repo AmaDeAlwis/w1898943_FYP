@@ -9,24 +9,17 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- SAFE RESET before widget rendering ---
-if st.session_state.get("reset_now", False):
-    if any(k in st.session_state for k in ["age", "nodes", "patient_id"]):
-        for key in [
-            "patient_id", "age", "nodes", "meno", "stage",
-            "her2", "er", "pr", "chemo", "surgery", "radio", "hormone",
-            "surv_5yr", "surv_10yr", "times", "surv_func", "predicted"
-        ]:
-            st.session_state.pop(key, None)
-        st.session_state.reset_now = False
-        st.experimental_rerun()
+# --- Reset before rendering ---
+if st.query_params.get("reset") == "1":
+    st.query_params.clear()
+    st.session_state.clear()
+    st.experimental_rerun()
 
-if "predicted" not in st.session_state:
-    st.session_state.predicted = False
-
+# --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
+# --- MongoDB Connection ---
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
@@ -98,12 +91,12 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at Bottom ---
-b1, b2 = st.columns(2)
-with b1:
+# --- Buttons at the Bottom ---
+col_btn1, col_btn2 = st.columns(2)
+with col_btn1:
     if st.button("RESET"):
-        st.session_state.reset_now = True
-with b2:
+        st.query_params["reset"] = "1"
+with col_btn2:
     predict = st.button("PREDICT")
 
 # --- Prediction Logic ---
@@ -145,56 +138,49 @@ if predict:
             "survival_10yr": float(surv_10yr)
         })
 
-        st.session_state.predicted = True
-        st.session_state.surv_5yr = surv_5yr
-        st.session_state.surv_10yr = surv_10yr
-        st.session_state.times = times
-        st.session_state.surv_func = surv_func
-        st.success("Prediction complete and saved!")
+        # --- Show Results ---
+        with st.container():
+            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Results Display ---
-if st.session_state.get("predicted", False):
-    with st.container():
-        st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-        st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-        st.write(f"**5-Year Survival Probability:** {st.session_state.surv_5yr:.2f} ({st.session_state.surv_5yr * 100:.0f}%)")
-        st.write(f"**10-Year Survival Probability:** {st.session_state.surv_10yr:.2f} ({st.session_state.surv_10yr * 100:.0f}%)")
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            fig, ax = plt.subplots()
+            ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+            for i, v in enumerate([surv_5yr, surv_10yr]):
+                ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+            ax.set_ylim(0, 1)
+            st.pyplot(fig)
 
-    st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        fig, ax = plt.subplots()
-        ax.bar(["5-Year", "10-Year"], [st.session_state.surv_5yr, st.session_state.surv_10yr], color="#FF69B4")
-        for i, v in enumerate([st.session_state.surv_5yr, st.session_state.surv_10yr]):
-            ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-        ax.set_ylim(0, 1)
-        st.pyplot(fig)
+        with c2:
+            if surv_5yr < 0.5:
+                st.error("Low Survival Chance")
+                st.info("Patient shows low probability. Consider aggressive treatment planning.")
+            elif surv_5yr < 0.75:
+                st.warning("Moderate Survival Chance")
+                st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+            else:
+                st.success("High Survival Chance")
+                st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
 
-    with c2:
-        if st.session_state.surv_5yr < 0.5:
-            st.error("Low Survival Chance")
-            st.info("Patient shows low probability. Consider aggressive treatment planning.")
-        elif st.session_state.surv_5yr < 0.75:
-            st.warning("Moderate Survival Chance")
-            st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
-        else:
-            st.success("High Survival Chance")
-            st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+        with c3:
+            fig2, ax2 = plt.subplots()
+            ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
+            ax2.set_title("Survival Curve")
+            ax2.set_xlabel("Time (Months)")
+            ax2.set_ylabel("Survival Probability")
+            st.pyplot(fig2)
 
-    with c3:
-        fig2, ax2 = plt.subplots()
-        ax2.plot(st.session_state.times, st.session_state.surv_func.values.flatten(), color="#c2185b")
-        ax2.set_title("Survival Curve")
-        ax2.set_xlabel("Time (Months)")
-        ax2.set_ylabel("Survival Probability")
-        st.pyplot(fig2)
-
-    pdf = BytesIO()
-    c = canvas.Canvas(pdf, pagesize=letter)
-    c.drawString(100, 750, f"Patient ID: {patient_id}")
-    c.drawString(100, 730, f"5-Year Survival: {st.session_state.surv_5yr:.2f}")
-    c.drawString(100, 710, f"10-Year Survival: {st.session_state.surv_10yr:.2f}")
-    c.save()
-    pdf.seek(0)
-    st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")
+        # PDF Report
+        pdf = BytesIO()
+        c = canvas.Canvas(pdf, pagesize=letter)
+        c.drawString(100, 750, f"Patient ID: {patient_id}")
+        c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
+        c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
+        c.save()
+        pdf.seek(0)
+        st.download_button("Download Report", data=pdf, file_name=f"Survival_Report_{patient_id}.pdf", mime="application/pdf")

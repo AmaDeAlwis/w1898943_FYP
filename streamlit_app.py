@@ -9,22 +9,34 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# ----------------------- Flags -----------------------
+# ------------------- Flags -------------------
 if "reset_now" not in st.session_state:
     st.session_state.reset_now = False
 if "predicted" not in st.session_state:
     st.session_state.predicted = False
 
-# ----------------------- Load Model & Scaler -----------------------
+# ------------------- Safe Reset on First Click -------------------
+if st.session_state.get("reset_now", False):
+    st.session_state["reset_now"] = False  # Clear the reset flag immediately
+    reset_defaults = {
+        "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
+        "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "", "radio": "", "hormone": ""
+    }
+    for key, default_val in reset_defaults.items():
+        if key in st.session_state:
+            st.session_state[key] = default_val
+    st.session_state.predicted = False
+
+# ------------------- Load Model & Scaler -------------------
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# ----------------------- MongoDB -----------------------
+# ------------------- MongoDB Setup -------------------
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# ----------------------- Page Config & CSS -----------------------
+# ------------------- Page Styling -------------------
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -38,18 +50,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# ----------------------- Safe Reset Before Inputs -----------------------
-if st.session_state.reset_now:
-    reset_defaults = {
-        "patient_id": "", "age": "", "nodes": "", "meno": "", "stage": "",
-        "her2": "", "er": "", "pr": "", "chemo": "", "surgery": "", "radio": "", "hormone": ""
-    }
-    for k, v in reset_defaults.items():
-        st.session_state[k] = v
-    st.session_state.predicted = False
-    st.session_state.reset_now = False
-
-# ----------------------- Inputs -----------------------
+# ------------------- Input Fields -------------------
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -92,18 +93,15 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# ----------------------- Buttons -----------------------
+# ------------------- Buttons -------------------
 b1, b2 = st.columns(2)
 with b1:
-    reset = st.button("RESET")
+    if st.button("RESET"):
+        st.session_state.reset_now = True
 with b2:
     predict = st.button("PREDICT")
 
-# ----------------------- Reset Handler -----------------------
-if reset:
-    st.session_state.reset_now = True
-
-# ----------------------- Prediction Handler -----------------------
+# ------------------- Prediction -------------------
 if predict:
     if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
         st.error("Please fill out all fields before predicting.")
@@ -148,7 +146,7 @@ if predict:
         st.session_state.surv_func = surv_func
         st.success("Prediction complete and saved!")
 
-# ----------------------- Show Results -----------------------
+# ------------------- Results -------------------
 if st.session_state.predicted:
     st.markdown("<div class='white-box'>", unsafe_allow_html=True)
     st.markdown("<h3 class='result-heading'>Survival Predictions</h3>", unsafe_allow_html=True)
@@ -185,7 +183,7 @@ if st.session_state.predicted:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # PDF Download
+    # PDF Report
     pdf = BytesIO()
     c = canvas.Canvas(pdf, pagesize=letter)
     c.drawString(100, 750, f"Patient ID: {patient_id}")

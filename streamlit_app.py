@@ -56,13 +56,6 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
-# --- Reset Button Logic ---
-col_b1, col_b2 = st.columns(2)
-with col_b1:
-    if st.button("RESET"):
-        st.session_state.clear()
-        st.rerun()
-
 # --- Inputs ---
 patient_id = st.text_input("Patient ID (Required)", key="patient_id")
 if patient_id:
@@ -117,11 +110,17 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Predict Button ---
+# --- Buttons at Bottom ---
+st.markdown("<br><br>", unsafe_allow_html=True)
+col_b1, col_b2 = st.columns(2)
+with col_b1:
+    if st.button("RESET"):
+        st.session_state.clear()
+        st.rerun()
 with col_b2:
     predict = st.button("PREDICT")
 
-# --- Prediction Logic ---
+# --- Prediction ---
 if predict:
     required = [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]
     if "" in required:

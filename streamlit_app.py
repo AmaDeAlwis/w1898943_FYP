@@ -242,7 +242,7 @@ if "surv_5yr" in st.session_state:
             st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
         previous_records = list(collection.find({"patient_id": patient_id}).sort("timestamp", 1))
         if len(previous_records) > 1:
-        df_prev = pd.DataFrame(previous_records)
+            df_prev = pd.DataFrame(previous_records)
             fig_history, ax_history = plt.subplots(figsize=(4.5, 3.2))
             ax_history.plot(df_prev["timestamp"], df_prev["survival_5yr"], marker='o', linestyle='-')
             ax_history.set_title("5-Year Survival History", fontsize=10)

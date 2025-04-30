@@ -192,7 +192,7 @@ if predict and patient_id:
         st.session_state["surv_10yr"] = surv_10yr
         st.session_state["surv_times"] = times
         st.session_state["surv_func_values"] = surv_func.values.flatten()
-        st.session_state["patient_id"] = patient_id
+        st.session_state["saved_patient_id"] = patient_id
 
         collection.insert_one({
             "patient_id": patient_id,
@@ -209,7 +209,7 @@ if "surv_5yr" in st.session_state:
     surv_10yr = st.session_state["surv_10yr"]
     times = st.session_state["surv_times"]
     surv_func_values = st.session_state["surv_func_values"]
-    patient_id = st.session_state["patient_id"]
+    patient_id = st.session_state["saved_patient_id"]
 
     with st.container():
         st.markdown(f"""
@@ -252,7 +252,7 @@ if "surv_5yr" in st.session_state:
     # --- PDF Report ---
     pdf_buffer = BytesIO()
     c = canvas.Canvas(pdf_buffer, pagesize=letter)
-    c.drawString(100, 750, f"Patient ID: {patient_id}")
+    c.drawString(100, 750, f"Patient ID: {st.session_state['saved_patient_id']}")
     c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
     c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
     c.save()
@@ -262,7 +262,7 @@ if "surv_5yr" in st.session_state:
     st.download_button(
         label="Download Report",
         data=pdf_buffer,
-        file_name=f"Survival_Report_{patient_id}.pdf",
+        file_name=f"Survival_Report_{st.session_state['saved_patient_id']}.pdf",
         mime="application/pdf",
         help="Download a summary of the prediction"
     )

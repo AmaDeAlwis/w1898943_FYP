@@ -194,6 +194,16 @@ if predict and patient_id:
             "survival_10yr": float(surv_10yr)
         })
 
+        # --- Generate PDF report ---
+        pdf = BytesIO()
+        c = canvas.Canvas(pdf, pagesize=letter)
+        c.setFont("Helvetica", 12)
+        c.drawString(100, 750, f"Patient ID: {patient_id}")
+        c.drawString(100, 730, f"5-Year Survival Probability: {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+        c.drawString(100, 710, f"10-Year Survival Probability: {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+        c.save()
+        pdf.seek(0)
+
         st.success("✅ Prediction complete and saved!")
 
         # --- Display Predictions Inside White Box ---
@@ -205,7 +215,6 @@ if predict and patient_id:
                     <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
                 </div>
             """, unsafe_allow_html=True)
-
 
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
         c1, c2, c3 = st.columns(3)
@@ -235,7 +244,8 @@ if predict and patient_id:
             ax2.set_xlabel("Time (Months)")
             ax2.set_ylabel("Survival Probability")
             st.pyplot(fig2)
-                # --- Download Button ---
+
+        # --- Download Button ---
         st.markdown(
             "<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>",
             unsafe_allow_html=True
@@ -247,4 +257,3 @@ if predict and patient_id:
             mime="application/pdf",
             help="Download a summary of the prediction"
         )
-

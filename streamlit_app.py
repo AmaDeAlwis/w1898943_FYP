@@ -9,10 +9,15 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- FINAL RESET FIX ---
+# --- Final Reset Fix (only clear inputs, not entire form) ---
+reset_keys = ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]
+
 if st.session_state.get("reset_triggered"):
-    st.session_state.clear()
-    st.stop()
+    for key in reset_keys:
+        if key in st.session_state:
+            del st.session_state[key]
+    del st.session_state["reset_triggered"]
+    st.rerun()
 
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")

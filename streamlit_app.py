@@ -9,10 +9,10 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- True RESET Logic ---
-if "reset_triggered" in st.session_state:
+# --- FINAL RESET FIX ---
+if st.session_state.get("reset_triggered"):
     st.session_state.clear()
-    st.rerun()
+    st.stop()
 
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
@@ -121,7 +121,6 @@ with col_b1:
     if st.button("RESET"):
         st.session_state["reset_triggered"] = True
         st.rerun()
-
 with col_b2:
     predict = st.button("PREDICT")
 

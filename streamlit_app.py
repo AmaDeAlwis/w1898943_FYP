@@ -252,7 +252,7 @@ if "surv_5yr" in st.session_state:
     pdf_buffer = BytesIO()
     c = canvas.Canvas(pdf_buffer, pagesize=letter)
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(100, 770, "🩺 Breast Cancer Survival Prediction Report")
+    c.drawString(100, 770, " Breast Cancer Survival Prediction Report")
     
     c.setFont("Helvetica", 12)
     c.drawString(100, 740, f"Patient ID: {st.session_state['saved_patient_id']}")

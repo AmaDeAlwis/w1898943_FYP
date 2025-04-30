@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from lifelines import CoxPHFitter
 
 # --- Keys for resetting ---
 reset_keys = ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]
@@ -126,4 +127,45 @@ with col_b1:
         st.rerun()
 with col_b2:
     if st.button("PREDICT"):
-        st.success("Prediction would run here.")
+        if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
+            st.error("Please fill out all fields before predicting.")
+        else:
+            menopausal = 1 if menopausal_status == "Post-menopausal" else 0
+            er = 1 if er == "Positive" else 0
+            pr = 1 if pr == "Positive" else 0
+            her2_vals = [0, 0, 0, 0]
+            her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
+            if her2 in her2_opts:
+                her2_vals[her2_opts.index(her2)] = 1
+            chemo = 1 if chemo == "Yes" else 0
+            radio = 1 if radio == "Yes" else 0
+            hormone = 1 if hormone == "Yes" else 0
+            surgery_conserve = 1 if surgery == "Breast-conserving" else 0
+            surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+
+            features = np.array([
+                float(age), chemo, er, hormone, menopausal, float(lymph_nodes), pr, radio, int(tumor_stage),
+                surgery_conserve, surgery_mastectomy, *her2_vals
+            ]).reshape(1, -1)
+
+            features_scaled = scaler.transform(features)
+            df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
+
+            surv_func = cox_model.predict_survival_function(df_input)
+            times = surv_func.index.values
+            surv_5yr = np.interp(60, times, surv_func.values.flatten())
+            surv_10yr = np.interp(120, times, surv_func.values.flatten())
+
+            collection.insert_one({
+                "patient_id": patient_id,
+                "timestamp": pd.Timestamp.now(),
+                "survival_5yr": float(surv_5yr),
+                "survival_10yr": float(surv_10yr)
+            })
+
+            st.success("✅ Prediction complete and saved!")
+            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+            st.markdown("</div>", unsafe_allow_html=True)

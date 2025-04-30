@@ -39,12 +39,37 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
     margin-top: 2rem;
     margin-bottom: 1rem;
 }
+.result-heading {
+    font-size: 22px;
+    color: #ad1457;
+    font-weight: bold;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+.white-box {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+.stButton button {
+    background-color: #ad1457 !important;
+    color: white !important;
+    border-radius: 10px;
+    font-weight: bold;
+}
 </style>
 """, unsafe_allow_html=True)
 
 st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
 
+# --- Patient ID ---
+patient_id = st.text_input("Patient ID (Required)", value=default_values["patient_id"], key="patient_id")
+
 # --- Inputs ---
+st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=default_values["age"], key="age")
@@ -100,4 +125,5 @@ with col_b1:
         st.session_state["reset_triggered"] = True
         st.rerun()
 with col_b2:
-    st.button("PREDICT")
+    if st.button("PREDICT"):
+        st.success("Prediction would run here.")

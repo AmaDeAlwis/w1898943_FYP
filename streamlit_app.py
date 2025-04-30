@@ -235,3 +235,16 @@ if predict and patient_id:
             ax2.set_xlabel("Time (Months)")
             ax2.set_ylabel("Survival Probability")
             st.pyplot(fig2)
+                # --- Download Button ---
+        st.markdown(
+            "<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>",
+            unsafe_allow_html=True
+        )
+        st.download_button(
+            label="Download Report",
+            data=pdf,
+            file_name=f"Survival_Report_{patient_id}.pdf",
+            mime="application/pdf",
+            help="Download a summary of the prediction"
+        )
+

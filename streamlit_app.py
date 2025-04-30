@@ -39,6 +39,14 @@ st.markdown("""
     color: #ad1457;
     margin-bottom: 2rem;
 }
+h1 { color: #ad1457; text-align: center; font-weight: bold; }
+.section-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ad1457;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
 .result-heading {
     font-size: 22px;
     color: #ad1457;

@@ -196,14 +196,15 @@ if predict and patient_id:
 
         st.success("✅ Prediction complete and saved!")
 
-                # --- Display Predictions Inside White Box ---
+        # --- Display Predictions Inside White Box ---
         with st.container():
-            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-            st.markdown("</div>", unsafe_allow_html=True)
-
+            st.markdown(f"""
+                <div class='white-box'>
+                    <div class='result-heading'>Survival Predictions</div>
+                    <p><strong>5-Year Survival Probability:</strong> {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)</p>
+                    <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
+                </div>
+            """, unsafe_allow_html=True)
 
 
         st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)

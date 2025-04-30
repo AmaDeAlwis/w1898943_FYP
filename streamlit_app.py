@@ -197,8 +197,13 @@ if predict and patient_id:
         st.success("✅ Prediction complete and saved!")
 
         with st.container():
-            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+    st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+    st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+    st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+    st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+                            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
             st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
             st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
             
@@ -211,8 +216,8 @@ if predict and patient_id:
             ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
             for i, v in enumerate([surv_5yr, surv_10yr]):
                 ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-                ax.set_ylim(0, 1)
-                st.pyplot(fig)
+            ax.set_ylim(0, 1)
+            st.pyplot(fig)
 
         with c2:
             if surv_5yr < 0.5:

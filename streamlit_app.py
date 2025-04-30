@@ -148,82 +148,86 @@ with col4:
                            key="hormone")
 
 # --- Buttons ---
+predict = False
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     if st.button("RESET"):
         st.session_state["reset_triggered"] = True
         st.rerun()
 with col_b2:
-    if st.button("PREDICT"):
-        if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage] or not age_valid or not nodes_valid:
-            st.error("Please fill out all fields correctly before predicting.")
-        else:
-            menopausal = 1 if menopausal_status == "Post-menopausal" else 0
-            er = 1 if er == "Positive" else 0
-            pr = 1 if pr == "Positive" else 0
-            her2_vals = [0, 0, 0, 0]
-            her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
-            if her2 in her2_opts:
-                her2_vals[her2_opts.index(her2)] = 1
-            chemo = 1 if chemo == "Yes" else 0
-            radio = 1 if radio == "Yes" else 0
-            hormone = 1 if hormone == "Yes" else 0
-            surgery_conserve = 1 if surgery == "Breast-conserving" else 0
-            surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
+    predict = st.button("PREDICT")
 
-            features = np.array([
-                float(age), chemo, er, hormone, menopausal, float(lymph_nodes), pr, radio, int(tumor_stage),
-                surgery_conserve, surgery_mastectomy, *her2_vals
-            ]).reshape(1, -1)
+if predict and patient_id:
+    if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage] or not age_valid or not nodes_valid:
+        st.error("Please fill out all fields correctly before predicting.")
+    else:
+        menopausal = 1 if menopausal_status == "Post-menopausal" else 0
+        er = 1 if er == "Positive" else 0
+        pr = 1 if pr == "Positive" else 0
+        her2_vals = [0, 0, 0, 0]
+        her2_opts = ["Gain", "Loss", "Neutral", "Undef"]
+        if her2 in her2_opts:
+            her2_vals[her2_opts.index(her2)] = 1
+        chemo = 1 if chemo == "Yes" else 0
+        radio = 1 if radio == "Yes" else 0
+        hormone = 1 if hormone == "Yes" else 0
+        surgery_conserve = 1 if surgery == "Breast-conserving" else 0
+        surgery_mastectomy = 1 if surgery == "Mastectomy" else 0
 
-            features_scaled = scaler.transform(features)
-            df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
+        features = np.array([
+            float(age), chemo, er, hormone, menopausal, float(lymph_nodes), pr, radio, int(tumor_stage),
+            surgery_conserve, surgery_mastectomy, *her2_vals
+        ]).reshape(1, -1)
 
-            surv_func = cox_model.predict_survival_function(df_input)
-            times = surv_func.index.values
-            surv_5yr = np.interp(60, times, surv_func.values.flatten())
-            surv_10yr = np.interp(120, times, surv_func.values.flatten())
+        features_scaled = scaler.transform(features)
+        df_input = pd.DataFrame(features_scaled, columns=cox_model.params_.index)
 
-            collection.insert_one({
-                "patient_id": patient_id,
-                "timestamp": pd.Timestamp.now(),
-                "survival_5yr": float(surv_5yr),
-                "survival_10yr": float(surv_10yr)
-            })
+        surv_func = cox_model.predict_survival_function(df_input)
+        times = surv_func.index.values
+        surv_5yr = np.interp(60, times, surv_func.values.flatten())
+        surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
-            st.success("✅ Prediction complete and saved!")
-            with st.container():
-                st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-                st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-                st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-                st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-                st.markdown("</div>", unsafe_allow_html=True)
+        collection.insert_one({
+            "patient_id": patient_id,
+            "timestamp": pd.Timestamp.now(),
+            "survival_5yr": float(surv_5yr),
+            "survival_10yr": float(surv_10yr)
+        })
 
-            st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                fig, ax = plt.subplots()
-                ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
-                for i, v in enumerate([surv_5yr, surv_10yr]):
-                    ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-                ax.set_ylim(0, 1)
-                st.pyplot(fig)
+        st.success("✅ Prediction complete and saved!")
 
-            with c2:
-                if surv_5yr < 0.5:
-                    st.error("Low Survival Chance")
-                    st.info("Patient shows low probability. Consider aggressive treatment planning.")
-                elif surv_5yr < 0.75:
-                    st.warning("Moderate Survival Chance")
-                    st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
-                else:
-                    st.success("High Survival Chance")
-                    st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+        with st.container():
+            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+            st.markdown("</div>", unsafe_allow_html=True)
 
-            with c3:
-                fig2, ax2 = plt.subplots()
-                ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
-                ax2.set_title("Survival Curve")
-                ax2.set_xlabel("Time (Months)")
-                ax2.set_ylabel("Survival Probability")
-                st.pyplot(fig2)
+        st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            fig, ax = plt.subplots()
+            ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+            for i, v in enumerate([surv_5yr, surv_10yr]):
+                ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+            ax.set_ylim(0, 1)
+            st.pyplot(fig)
+
+        with c2:
+            if surv_5yr < 0.5:
+                st.error("Low Survival Chance")
+                st.info("Patient shows low probability. Consider aggressive treatment planning.")
+            elif surv_5yr < 0.75:
+                st.warning("Moderate Survival Chance")
+                st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+            else:
+                st.success("High Survival Chance")
+                st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+
+        with c3:
+            fig2, ax2 = plt.subplots()
+            ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
+            ax2.set_title("Survival Curve")
+            ax2.set_xlabel("Time (Months)")
+            ax2.set_ylabel("Survival Probability")
+            st.pyplot(fig2)

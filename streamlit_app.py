@@ -187,6 +187,11 @@ if predict and patient_id:
         surv_5yr = np.interp(60, times, surv_func.values.flatten())
         surv_10yr = np.interp(120, times, surv_func.values.flatten())
 
+        st.session_state["surv_5yr"] = surv_5yr
+        st.session_state["surv_10yr"] = surv_10yr
+        st.session_state["surv_times"] = times
+        st.session_state["surv_func_values"] = surv_func.values.flatten()
+
         collection.insert_one({
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
@@ -194,66 +199,67 @@ if predict and patient_id:
             "survival_10yr": float(surv_10yr)
         })
 
-        # --- Generate PDF report ---
-        pdf = BytesIO()
-        c = canvas.Canvas(pdf, pagesize=letter)
-        c.setFont("Helvetica", 12)
-        c.drawString(100, 750, f"Patient ID: {patient_id}")
-        c.drawString(100, 730, f"5-Year Survival Probability: {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-        c.drawString(100, 710, f"10-Year Survival Probability: {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-        c.save()
-        pdf.seek(0)
-
         st.success("✅ Prediction complete and saved!")
 
-        # --- Display Predictions Inside White Box ---
-        with st.container():
-            st.markdown(f"""
-                <div class='white-box'>
-                    <div class='result-heading'>Survival Predictions</div>
-                    <p><strong>5-Year Survival Probability:</strong> {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)</p>
-                    <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
-                </div>
-            """, unsafe_allow_html=True)
+# --- Render Results if Available ---
+if "surv_5yr" in st.session_state:
+    surv_5yr = st.session_state["surv_5yr"]
+    surv_10yr = st.session_state["surv_10yr"]
+    times = st.session_state["surv_times"]
+    surv_func_values = st.session_state["surv_func_values"]
 
-        st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            fig, ax = plt.subplots()
-            ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
-            for i, v in enumerate([surv_5yr, surv_10yr]):
-                ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-            ax.set_ylim(0, 1)
-            st.pyplot(fig)
+    with st.container():
+        st.markdown(f"""
+            <div class='white-box'>
+                <div class='result-heading'>Survival Predictions</div>
+                <p><strong>5-Year Survival Probability:</strong> {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)</p>
+                <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
+            </div>
+        """, unsafe_allow_html=True)
 
-        with c2:
-            if surv_5yr < 0.5:
-                st.error("Low Survival Chance")
-                st.info("Patient shows low probability. Consider aggressive treatment planning.")
-            elif surv_5yr < 0.75:
-                st.warning("Moderate Survival Chance")
-                st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
-            else:
-                st.success("High Survival Chance")
-                st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+    st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        fig, ax = plt.subplots()
+        ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+        for i, v in enumerate([surv_5yr, surv_10yr]):
+            ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+        ax.set_ylim(0, 1)
+        st.pyplot(fig)
 
-        with c3:
-            fig2, ax2 = plt.subplots()
-            ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
-            ax2.set_title("Survival Curve")
-            ax2.set_xlabel("Time (Months)")
-            ax2.set_ylabel("Survival Probability")
-            st.pyplot(fig2)
+    with c2:
+        if surv_5yr < 0.5:
+            st.error("Low Survival Chance")
+            st.info("Patient shows low probability. Consider aggressive treatment planning.")
+        elif surv_5yr < 0.75:
+            st.warning("Moderate Survival Chance")
+            st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+        else:
+            st.success("High Survival Chance")
+            st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
 
-        # --- Download Button ---
-        st.markdown(
-            "<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>",
-            unsafe_allow_html=True
-        )
-        st.download_button(
-            label="Download Report",
-            data=pdf,
-            file_name=f"Survival_Report_{patient_id}.pdf",
-            mime="application/pdf",
-            help="Download a summary of the prediction"
-        )
+    with c3:
+        fig2, ax2 = plt.subplots()
+        ax2.plot(times, surv_func_values, color="#c2185b")
+        ax2.set_title("Survival Curve")
+        ax2.set_xlabel("Time (Months)")
+        ax2.set_ylabel("Survival Probability")
+        st.pyplot(fig2)
+
+    # --- PDF Report ---
+    pdf_buffer = BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=letter)
+    c.drawString(100, 750, f"Patient ID: {patient_id}")
+    c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
+    c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
+    c.save()
+    pdf_buffer.seek(0)
+
+    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>", unsafe_allow_html=True)
+    st.download_button(
+        label="Download Report",
+        data=pdf_buffer,
+        file_name=f"Survival_Report_{patient_id}.pdf",
+        mime="application/pdf",
+        help="Download a summary of the prediction"
+    )

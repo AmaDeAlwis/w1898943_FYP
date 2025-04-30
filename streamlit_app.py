@@ -86,10 +86,10 @@ with col1:
             age_val = float(age)
             if age_val < 20:
                 age_valid = False
-                st.markdown("<p style='color: #d6336c;'>⚠️ Age must be at least 20.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #d6336c;'> Age must be at least 20.</p>", unsafe_allow_html=True)
         except ValueError:
             age_valid = False
-            st.markdown("<p style='color: #d6336c;'>⚠️ Age must be a valid number.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #d6336c;'> Age must be a valid number.</p>", unsafe_allow_html=True)
 
     lymph_nodes = st.text_input("Lymph Nodes Examined", value=default_values["nodes"], key="nodes")
     nodes_valid = True
@@ -98,10 +98,10 @@ with col1:
             nodes_val = float(lymph_nodes)
             if nodes_val < 0:
                 nodes_valid = False
-                st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #d6336c;'> Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
         except ValueError:
             nodes_valid = False
-            st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #d6336c;'> Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
 
     meno_opts = ["", "Pre-menopausal", "Post-menopausal"]
     menopausal_status = st.selectbox("Menopausal Status", meno_opts,
@@ -201,7 +201,7 @@ if predict and patient_id:
             "survival_10yr": float(surv_10yr)
         })
 
-        st.success("✅ Prediction complete and saved!")
+        st.success(" Prediction complete and saved!")
 
 # --- Render Results if Available ---
 if "surv_5yr" in st.session_state:
@@ -249,16 +249,36 @@ if "surv_5yr" in st.session_state:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # --- PDF Report ---
     pdf_buffer = BytesIO()
     c = canvas.Canvas(pdf_buffer, pagesize=letter)
-    c.drawString(100, 750, f"Patient ID: {st.session_state['saved_patient_id']}")
-    c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
-    c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(100, 770, "🩺 Breast Cancer Survival Prediction Report")
+    
+    c.setFont("Helvetica", 12)
+    c.drawString(100, 740, f"Patient ID: {st.session_state['saved_patient_id']}")
+    c.drawString(100, 720, f"5-Year Survival Probability: {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+    c.drawString(100, 700, f"10-Year Survival Probability: {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+    
+    # Add risk tag and recommendation
+    if surv_5yr < 0.5:
+        risk = "High Risk"
+        recommendation = "Consider aggressive treatment planning."
+    elif surv_5yr < 0.75:
+        risk = "Moderate Risk"
+        recommendation = "Monitor closely and adjust treatment accordingly."
+    else:
+        risk = "Low Risk"
+        recommendation = "Favorable outlook. Continue regular follow-up."
+    
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(100, 670, f"Risk Category: {risk}")
+    c.setFont("Helvetica", 12)
+    c.drawString(100, 650, f"Recommendation: {recommendation}")
+    
     c.save()
     pdf_buffer.seek(0)
 
-    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'> Download your report </p>", unsafe_allow_html=True)
     st.download_button(
         label="Download Report",
         data=pdf_buffer,

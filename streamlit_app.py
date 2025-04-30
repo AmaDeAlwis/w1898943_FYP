@@ -32,13 +32,12 @@ collection = db["patient_records"]
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
-h1 { color: #ad1457; text-align: center; font-weight: bold; }
-.section-title {
-    font-size: 22px;
+.custom-title {
+    font-size: 36px;
     font-weight: bold;
+    text-align: center;
     color: #ad1457;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 }
 .result-heading {
     font-size: 22px;
@@ -64,7 +63,8 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True)
+st.markdown('<div class="custom-title">Breast Cancer Survival Prediction</div>', unsafe_allow_html=True)
+
 
 # --- Patient ID ---
 patient_id = st.text_input("Patient ID (Required)", value=default_values["patient_id"], key="patient_id")
@@ -86,10 +86,10 @@ with col1:
             age_val = float(age)
             if age_val < 20:
                 age_valid = False
-                st.markdown("<p style='color: #d6336c;'>⚠️ Age must be at least 20.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #d6336c;'> Age must be at least 20.</p>", unsafe_allow_html=True)
         except ValueError:
             age_valid = False
-            st.markdown("<p style='color: #d6336c;'>⚠️ Age must be a valid number.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #d6336c;'> Age must be a valid number.</p>", unsafe_allow_html=True)
 
     lymph_nodes = st.text_input("Lymph Nodes Examined", value=default_values["nodes"], key="nodes")
     nodes_valid = True
@@ -98,10 +98,10 @@ with col1:
             nodes_val = float(lymph_nodes)
             if nodes_val < 0:
                 nodes_valid = False
-                st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
+                st.markdown("<p style='color: #d6336c;'> Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
         except ValueError:
             nodes_valid = False
-            st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #d6336c;'> Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
 
     meno_opts = ["", "Pre-menopausal", "Post-menopausal"]
     menopausal_status = st.selectbox("Menopausal Status", meno_opts,
@@ -201,7 +201,7 @@ if predict and patient_id:
             "survival_10yr": float(surv_10yr)
         })
 
-        st.success("✅ Prediction complete and saved!")
+        st.success(" Prediction complete and saved!")
 
 # --- Render Results if Available ---
 if "surv_5yr" in st.session_state:
@@ -240,18 +240,7 @@ if "surv_5yr" in st.session_state:
         else:
             st.success("High Survival Chance")
             st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
-        previous_records = list(collection.find({"patient_id": patient_id}).sort("timestamp", 1))
-        if len(previous_records) > 1:
-            df_prev = pd.DataFrame(previous_records)
-            fig_history, ax_history = plt.subplots(figsize=(4.5, 3.2))
-            ax_history.plot(df_prev["timestamp"], df_prev["survival_5yr"], marker='o', linestyle='-')
-            ax_history.set_title("5-Year Survival History", fontsize=10)
-            ax_history.set_ylabel("Probability")
-            ax_history.set_xlabel("Visit Date")
-            ax_history.set_ylim(0, 1)
-            ax_history.grid(True)
-            st.pyplot(fig_history)
-
+ 
 
     with c3:
         fig2, ax2 = plt.subplots()
@@ -261,16 +250,37 @@ if "surv_5yr" in st.session_state:
         ax2.set_ylabel("Survival Probability")
         st.pyplot(fig2)
 
-    # --- PDF Report ---
-    pdf_buffer = BytesIO()
-    c = canvas.Canvas(pdf_buffer, pagesize=letter)
-    c.drawString(100, 750, f"Patient ID: {st.session_state['saved_patient_id']}")
-    c.drawString(100, 730, f"5-Year Survival: {surv_5yr:.2f}")
-    c.drawString(100, 710, f"10-Year Survival: {surv_10yr:.2f}")
-    c.save()
-    pdf_buffer.seek(0)
+        pdf_buffer = BytesIO()
+        c = canvas.Canvas(pdf_buffer, pagesize=letter)
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(100, 770, " Breast Cancer Survival Prediction Report")
+        
+        c.setFont("Helvetica", 12)
+        c.drawString(100, 740, f"Patient ID: {st.session_state['saved_patient_id']}")
+        c.drawString(100, 720, f"5-Year Survival Probability: {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+        c.drawString(100, 700, f"10-Year Survival Probability: {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+        
+        # Add risk tag and recommendation
+        if surv_5yr < 0.5:
+            risk = "High Risk"
+            recommendation = "Consider aggressive treatment planning."
+        elif surv_5yr < 0.75:
+            risk = "Moderate Risk"
+            recommendation = "Monitor closely and adjust treatment accordingly."
+        else:
+            risk = "Low Risk"
+            recommendation = "Favorable outlook. Continue regular follow-up."
+        
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(100, 670, f"Risk Category: {risk}")
+        c.setFont("Helvetica", 12)
+        c.drawString(100, 650, f"Recommendation: {recommendation}")
+        
+        c.save()
+        pdf_buffer.seek(0)
 
-    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'>⬇️ Download your report:</p>", unsafe_allow_html=True)
+
+    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'> Download your report:</p>", unsafe_allow_html=True)
     st.download_button(
         label="Download Report",
         data=pdf_buffer,

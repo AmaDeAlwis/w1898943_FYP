@@ -68,13 +68,41 @@ st.markdown("<h1>Breast Cancer Survival Prediction</h1>", unsafe_allow_html=True
 
 # --- Patient ID ---
 patient_id = st.text_input("Patient ID (Required)", value=default_values["patient_id"], key="patient_id")
+if patient_id:
+    prev = list(collection.find({"patient_id": patient_id}))
+    if prev:
+        with st.expander("Previous Predictions"):
+            for r in prev:
+                st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
 # --- Inputs ---
 st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
     age = st.text_input("Age", value=default_values["age"], key="age")
+    age_valid = True
+    if age:
+        try:
+            age_val = float(age)
+            if age_val < 20:
+                age_valid = False
+                st.markdown("<p style='color: #d6336c;'>⚠️ Age must be at least 20.</p>", unsafe_allow_html=True)
+        except ValueError:
+            age_valid = False
+            st.markdown("<p style='color: #d6336c;'>⚠️ Age must be a valid number.</p>", unsafe_allow_html=True)
+
     lymph_nodes = st.text_input("Lymph Nodes Examined", value=default_values["nodes"], key="nodes")
+    nodes_valid = True
+    if lymph_nodes:
+        try:
+            nodes_val = float(lymph_nodes)
+            if nodes_val < 0:
+                nodes_valid = False
+                st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be 0 or greater.</p>", unsafe_allow_html=True)
+        except ValueError:
+            nodes_valid = False
+            st.markdown("<p style='color: #d6336c;'>⚠️ Lymph Nodes must be a valid number.</p>", unsafe_allow_html=True)
+
     meno_opts = ["", "Pre-menopausal", "Post-menopausal"]
     menopausal_status = st.selectbox("Menopausal Status", meno_opts,
                                      index=meno_opts.index(default_values["meno"]) if default_values["meno"] in meno_opts else 0,
@@ -127,8 +155,8 @@ with col_b1:
         st.rerun()
 with col_b2:
     if st.button("PREDICT"):
-        if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage]:
-            st.error("Please fill out all fields before predicting.")
+        if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage] or not age_valid or not nodes_valid:
+            st.error("Please fill out all fields correctly before predicting.")
         else:
             menopausal = 1 if menopausal_status == "Post-menopausal" else 0
             er = 1 if er == "Positive" else 0
@@ -164,8 +192,38 @@ with col_b2:
             })
 
             st.success("✅ Prediction complete and saved!")
-            st.markdown("<div class='white-box'>", unsafe_allow_html=True)
-            st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
-            st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
-            st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container():
+                st.markdown("<div class='white-box'>", unsafe_allow_html=True)
+                st.markdown("<div class='result-heading'>Survival Predictions</div>", unsafe_allow_html=True)
+                st.write(f"**5-Year Survival Probability:** {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
+                st.write(f"**10-Year Survival Probability:** {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
+                st.markdown("</div>", unsafe_allow_html=True)
+
+            st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
+            c1, c2, c3 = st.columns(3)
+            with c1:
+                fig, ax = plt.subplots()
+                ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
+                for i, v in enumerate([surv_5yr, surv_10yr]):
+                    ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
+                ax.set_ylim(0, 1)
+                st.pyplot(fig)
+
+            with c2:
+                if surv_5yr < 0.5:
+                    st.error("Low Survival Chance")
+                    st.info("Patient shows low probability. Consider aggressive treatment planning.")
+                elif surv_5yr < 0.75:
+                    st.warning("Moderate Survival Chance")
+                    st.info("Patient is at moderate risk. Monitor closely and adjust treatment accordingly.")
+                else:
+                    st.success("High Survival Chance")
+                    st.info("Patient has a favorable survival outlook. Continue regular monitoring.")
+
+            with c3:
+                fig2, ax2 = plt.subplots()
+                ax2.plot(times, surv_func.values.flatten(), color="#c2185b")
+                ax2.set_title("Survival Curve")
+                ax2.set_xlabel("Time (Months)")
+                ax2.set_ylabel("Survival Probability")
+                st.pyplot(fig2)

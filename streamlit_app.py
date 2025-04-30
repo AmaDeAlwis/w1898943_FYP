@@ -252,7 +252,7 @@ if "surv_5yr" in st.session_state:
     pdf_buffer = BytesIO()
     c = canvas.Canvas(pdf_buffer, pagesize=letter)
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(100, 770, " Breast Cancer Survival Prediction Report")
+    c.drawString(100, 770, "🩺 Breast Cancer Survival Prediction Report")
     
     c.setFont("Helvetica", 12)
     c.drawString(100, 740, f"Patient ID: {st.session_state['saved_patient_id']}")
@@ -278,7 +278,8 @@ if "surv_5yr" in st.session_state:
     c.save()
     pdf_buffer.seek(0)
 
-    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'> Download your report </p>", unsafe_allow_html=True)
+
+    st.markdown("<p style='color:#ad1457; font-weight:bold; margin-top:1rem;'> Download your report:</p>", unsafe_allow_html=True)
     st.download_button(
         label="Download Report",
         data=pdf_buffer,

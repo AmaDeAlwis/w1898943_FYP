@@ -152,6 +152,7 @@ predict = False
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     if st.button("RESET"):
+        st.session_state.clear()
         st.session_state["reset_triggered"] = True
         st.rerun()
 with col_b2:
@@ -191,6 +192,7 @@ if predict and patient_id:
         st.session_state["surv_10yr"] = surv_10yr
         st.session_state["surv_times"] = times
         st.session_state["surv_func_values"] = surv_func.values.flatten()
+        st.session_state["patient_id"] = patient_id
 
         collection.insert_one({
             "patient_id": patient_id,
@@ -207,6 +209,7 @@ if "surv_5yr" in st.session_state:
     surv_10yr = st.session_state["surv_10yr"]
     times = st.session_state["surv_times"]
     surv_func_values = st.session_state["surv_func_values"]
+    patient_id = st.session_state["patient_id"]
 
     with st.container():
         st.markdown(f"""

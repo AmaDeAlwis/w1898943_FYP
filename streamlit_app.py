@@ -211,8 +211,8 @@ if predict and patient_id:
             ax.bar(["5-Year", "10-Year"], [surv_5yr, surv_10yr], color="#FF69B4")
             for i, v in enumerate([surv_5yr, surv_10yr]):
                 ax.text(i, v + 0.01, f"{v:.2f}", ha='center', fontweight='bold')
-            ax.set_ylim(0, 1)
-            st.pyplot(fig)
+                ax.set_ylim(0, 1)
+                st.pyplot(fig)
 
         with c2:
             if surv_5yr < 0.5:

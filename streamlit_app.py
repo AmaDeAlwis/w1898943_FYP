@@ -9,6 +9,11 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
+# --- Reset State via URL ---
+if st.query_params.get("reset") == "1":
+    st.query_params.clear()
+    st.rerun()
+
 # --- Load model and scaler ---
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
@@ -110,12 +115,11 @@ with col4:
     radio = st.selectbox("Radiotherapy", ["", "Yes", "No"], key="radio")
     hormone = st.selectbox("Hormone Therapy", ["", "Yes", "No"], key="hormone")
 
-# --- Buttons at Bottom ---
-st.markdown("<br><br>", unsafe_allow_html=True)
+# --- Buttons Right After Inputs ---
 col_b1, col_b2 = st.columns(2)
 with col_b1:
     if st.button("RESET"):
-        st.session_state.clear()
+        st.query_params["reset"] = "1"
         st.rerun()
 with col_b2:
     predict = st.button("PREDICT")

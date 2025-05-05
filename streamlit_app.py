@@ -221,7 +221,7 @@ if predict and patient_id:
         })
 
 
-        st.success(" Prediction complete and saved!")
+        st.success(" Prediction is completed and saved!")
 
 #Render Results if Available 
 if "surv_5yr" in st.session_state:
@@ -282,7 +282,7 @@ if "surv_5yr" in st.session_state:
         c.drawString(100, 720, f"5-Year Survival Probability: {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)")
         c.drawString(100, 700, f"10-Year Survival Probability: {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)")
         
-        # Add risk tag and recommendation
+        #Add risk tag and recommendation
         if surv_5yr < 0.5:
             risk = "High Risk"
             recommendation = "Consider aggressive treatment planning."

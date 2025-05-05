@@ -232,13 +232,15 @@ if "surv_5yr" in st.session_state:
     patient_id = st.session_state["saved_patient_id"]
 
     with st.container():
-        st.markdown(f"""
-            <div class='white-box'>
-                <div class='result-heading'>Survival Predictions</div>
-                <p><strong>5-Year Survival Probability:</strong> {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)</p>
-                <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
-            </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f"""
+        <div class='white-box'>
+            <div class='result-heading'>Survival Predictions</div>
+            <p><strong>5-Year Survival Probability:</strong> {surv_5yr:.2f} ({surv_5yr * 100:.0f}%)</p>
+            <p><strong>10-Year Survival Probability:</strong> {surv_10yr:.2f} ({surv_10yr * 100:.0f}%)</p>
+            <p style='margin-top: 1rem;'>This indicates a {surv_5yr * 100:.0f}% chance of survival at 5 years and {surv_10yr * 100:.0f}% at 10 years.</p>
+        </div>
+    """, unsafe_allow_html=True)
+
 
     st.markdown("<div class='section-title'>Results Overview</div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)

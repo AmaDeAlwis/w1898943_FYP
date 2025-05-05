@@ -79,7 +79,7 @@ patient_id = st.text_input("Patient ID (Required)", value=default_values["patien
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
     if prev:
-        with st.expander("Previous Predictions"):
+        with st.expander(" View previous predictions"):
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
@@ -168,7 +168,7 @@ with col_b2:
 
 if predict and patient_id:
     if "" in [age, lymph_nodes, menopausal_status, er, pr, her2, chemo, radio, hormone, surgery, tumor_stage] or not age_valid or not nodes_valid:
-        st.error("Please fill out all fields correctly before predicting.")
+        st.error("Please fill out all fields")
     else:
         menopausal = 1 if menopausal_status == "Post-menopausal" else 0
         er = 1 if er == "Positive" else 0

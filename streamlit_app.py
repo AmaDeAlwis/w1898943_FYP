@@ -9,26 +9,26 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from lifelines import CoxPHFitter
 
-# --- Keys for resetting ---
+#Keys for resetting
 reset_keys = ["patient_id", "age", "nodes", "meno", "stage", "her2", "er", "pr", "chemo", "surgery", "radio", "hormone"]
 
-# --- Default values for form inputs ---
+#Default values for form inputs
 if st.session_state.get("reset_triggered"):
     default_values = {k: "" for k in reset_keys}
     st.session_state.pop("reset_triggered")
 else:
     default_values = {k: st.session_state.get(k, "") for k in reset_keys}
 
-# --- Load model and scaler ---
+#Load model and scaler
 cox_model = joblib.load(".streamlit/cox_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
-# --- MongoDB connection ---
+#MongoDB connection
 client = MongoClient(st.secrets["MONGODB_URI"])
 db = client["breast_cancer_survival"]
 collection = db["patient_records"]
 
-# --- Page setup ---
+#Page setup 
 st.set_page_config(page_title="Breast Cancer Survival UI", layout="wide")
 st.markdown("""
 <style>
@@ -74,7 +74,7 @@ h1 { color: #ad1457; text-align: center; font-weight: bold; }
 st.markdown('<div class="custom-title">Breast Cancer Survival Prediction</div>', unsafe_allow_html=True)
 
 
-# --- Patient ID ---
+#Patient ID 
 patient_id = st.text_input("Patient ID (Required)", value=default_values["patient_id"], key="patient_id")
 if patient_id:
     prev = list(collection.find({"patient_id": patient_id}))
@@ -83,7 +83,7 @@ if patient_id:
             for r in prev:
                 st.write(f"{r['timestamp'].strftime('%Y-%m-%d %H:%M:%S')} ➔ 5yr: {r['survival_5yr']:.2f}, 10yr: {r['survival_10yr']:.2f}")
 
-# --- Inputs ---
+#Inputs
 st.markdown("<div class='section-title'>Clinical Information</div>", unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
@@ -155,7 +155,7 @@ with col4:
                            index=hormone_opts.index(default_values["hormone"]) if default_values["hormone"] in hormone_opts else 0,
                            key="hormone")
 
-# --- Buttons ---
+#Buttons
 predict = False
 col_b1, col_b2 = st.columns(2)
 with col_b1:
@@ -205,13 +205,25 @@ if predict and patient_id:
         collection.insert_one({
             "patient_id": patient_id,
             "timestamp": pd.Timestamp.now(),
+            "age": float(age),
+            "lymph_nodes_examined": float(lymph_nodes),
+            "menopausal_status": menopausal_status,
+            "tumor_stage": int(tumor_stage),
+            "her2_status": her2,
+            "er_status": "Positive" if er else "Negative",
+            "pr_status": "Positive" if pr else "Negative",
+            "chemotherapy": "Yes" if chemo else "No",
+            "radiotherapy": "Yes" if radio else "No",
+            "hormone_therapy": "Yes" if hormone else "No",
+            "surgery_type": "Breast-conserving" if surgery_conserve else "Mastectomy",
             "survival_5yr": float(surv_5yr),
             "survival_10yr": float(surv_10yr)
         })
 
+
         st.success(" Prediction complete and saved!")
 
-# --- Render Results if Available ---
+#Render Results if Available 
 if "surv_5yr" in st.session_state:
     surv_5yr = st.session_state["surv_5yr"]
     surv_10yr = st.session_state["surv_10yr"]
